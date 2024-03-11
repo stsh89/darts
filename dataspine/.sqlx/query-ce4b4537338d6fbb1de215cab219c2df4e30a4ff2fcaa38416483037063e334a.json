@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT id, game_id, player_name, score, turn_number, insert_time\nFROM playground.scores\nWHERE game_id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "game_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "player_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "score",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "turn_number",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "insert_time",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "ce4b4537338d6fbb1de215cab219c2df4e30a4ff2fcaa38416483037063e334a"
+}

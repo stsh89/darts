@@ -1,0 +1,55 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nINSERT INTO playground.scores (\n    game_id,\n    player_name,\n    score,\n    turn_number\n) VALUES (\n    $1, $2, $3, $4\n) RETURNING id, game_id, player_name, score, turn_number, insert_time\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "game_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "player_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "score",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "turn_number",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "insert_time",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "b46ede9fbec13883c59d5be8d8b88afb1e5e58555ce40a5d1470963502b3a37d"
+}
