@@ -21,6 +21,10 @@ impl Score {
     pub fn new(x: u8) -> Score {
         Score(x)
     }
+
+    pub fn value(&self) -> u8 {
+        self.0
+    }
 }
 
 impl GameScore {

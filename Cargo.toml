@@ -1,8 +1,9 @@
 [workspace]
 resolver = "2"
-members = [ "cli", "dataspine","score_tracker"]
+members = [ "cli", "coordinator", "dataspine","score_tracker"]
 
 [workspace.dependencies]
-thiserror = "1.0.57"
 anyhow = "1.0.80"
-
+sqlx = { version = "0.7.3", features = ["postgres", "runtime-tokio", "chrono", "uuid"] }
+thiserror = "1.0.57"
+uuid = "1.7.0"

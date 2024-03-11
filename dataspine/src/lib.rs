@@ -4,7 +4,10 @@ use uuid::Uuid;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("sqlx error: {0}")]
+    #[error("Unexpected number of affected rows: {0}")]
+    UnexpectedNumberOfAffectedRows(u64),
+
+    #[error("Sqlx error: {0}")]
     Sqlx(#[from] sqlx::Error),
 }
 
@@ -26,6 +29,12 @@ pub struct InsertScoreParameters {
     pub game_id: Uuid,
     pub player_name: String,
     pub score: i32,
+    pub turn_number: i32,
+}
+
+pub struct DeleteScoreParameters<'a> {
+    pub game_id: Uuid,
+    pub player_name: &'a str,
     pub turn_number: i32,
 }
 
@@ -93,6 +102,43 @@ INSERT INTO playground.scores (
     .await?;
 
     Ok(score)
+}
+
+pub async fn delete_score(
+    conn: &mut PgConnection,
+    parameters: DeleteScoreParameters<'_>,
+) -> Result<(), Error> {
+    let DeleteScoreParameters {
+        game_id,
+        player_name,
+        turn_number,
+    } = parameters;
+
+    let result = sqlx::query!(
+        r#"
+DELETE FROM playground.scores
+WHERE game_id = $1
+AND player_name = $2
+AND turn_number = $3
+        "#,
+        game_id,
+        player_name,
+        turn_number
+    )
+    .execute(conn)
+    .await?;
+
+    if result.rows_affected() == 0 {
+        return Err(Error::Sqlx(sqlx::Error::RowNotFound));
+    }
+
+    if result.rows_affected() > 1 {
+        return Err(Error::UnexpectedNumberOfAffectedRows(
+            result.rows_affected(),
+        ));
+    }
+
+    Ok(())
 }
 
 async fn list_scores(conn: &mut PgConnection, game_id: Uuid) -> Result<Vec<Score>, Error> {
