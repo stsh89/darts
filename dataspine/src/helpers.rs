@@ -1,6 +1,6 @@
+use crate::{Error, Score};
 use sqlx::PgConnection;
 use uuid::Uuid;
-use crate::{Error, Score};
 
 pub async fn list_scores(conn: &mut PgConnection, game_id: Uuid) -> Result<Vec<Score>, Error> {
     let scores = sqlx::query_as!(
