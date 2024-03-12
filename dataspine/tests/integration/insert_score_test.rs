@@ -1,5 +1,3 @@
-mod helpers;
-
 use dataspine::{insert_game, insert_score, InsertScoreParameters};
 use sqlx::PgPool;
 

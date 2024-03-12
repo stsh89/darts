@@ -1,7 +1,5 @@
-mod helpers;
-
+use crate::helpers;
 use dataspine::find_game;
-use helpers::get_game_id;
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -9,7 +7,7 @@ use uuid::Uuid;
 async fn it_finds_game(pool: PgPool) -> anyhow::Result<()> {
     let mut conn = pool.acquire().await?;
 
-    let game_id = get_game_id(&mut conn).await?;
+    let game_id = helpers::get_game_id(&mut conn).await?;
 
     let (game, scores) = find_game(&mut conn, game_id)
         .await?

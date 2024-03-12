@@ -1,14 +1,12 @@
-mod helpers;
-
+use crate::helpers;
 use dataspine::{delete_score, DeleteScoreParameters};
-use helpers::get_game_id;
 use sqlx::PgPool;
 
 #[sqlx::test(fixtures("games"))]
 async fn it_deletes_score(pool: PgPool) -> anyhow::Result<()> {
     let mut conn = pool.acquire().await?;
 
-    let game_id = get_game_id(&mut conn).await?;
+    let game_id = helpers::get_game_id(&mut conn).await?;
 
     let result = delete_score(
         &mut conn,
@@ -29,7 +27,7 @@ async fn it_deletes_score(pool: PgPool) -> anyhow::Result<()> {
 async fn it_does_not_delete_score(pool: PgPool) -> anyhow::Result<()> {
     let mut conn = pool.acquire().await?;
 
-    let game_id = get_game_id(&mut conn).await?;
+    let game_id = helpers::get_game_id(&mut conn).await?;
 
     let result = delete_score(
         &mut conn,
