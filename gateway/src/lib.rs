@@ -1,7 +1,10 @@
 pub mod referee;
 pub mod repo;
+pub mod spectator;
 
 pub use score_tracker::{GameScore, PlayerScore};
+
+use uuid::Uuid;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -17,4 +20,39 @@ pub enum Error {
 
 pub fn max_game_score() -> GameScore {
     GameScore::new(301)
+}
+
+pub struct Game {
+    pub id: Uuid,
+    pub player_number: PlayerNumber,
+    pub player1_scores: Vec<PlayerScore>,
+    pub player2_scores: Vec<PlayerScore>,
+}
+
+impl PlayerNumber {
+    fn next(&mut self) {
+        match self {
+            PlayerNumber::One => PlayerNumber::Two,
+            PlayerNumber::Two => PlayerNumber::One,
+        };
+    }
+
+    fn previous(&mut self) {
+        match self {
+            PlayerNumber::One => PlayerNumber::Two,
+            PlayerNumber::Two => PlayerNumber::One,
+        };
+    }
+
+    pub fn name(&self) -> &str {
+        match self {
+            PlayerNumber::One => "Player1",
+            PlayerNumber::Two => "Player2",
+        }
+    }
+}
+
+pub enum PlayerNumber {
+    One,
+    Two,
 }

@@ -1,4 +1,4 @@
-use crate::Error;
+use crate::{Error, Game, PlayerNumber};
 use score_tracker::{self, AddScore, GameScore};
 use std::sync::Arc;
 use uuid::Uuid;
@@ -29,41 +29,6 @@ pub struct DeleteScoreParameters<'a> {
     pub game_id: Uuid,
     pub player_name: &'a str,
     pub turn_number: u8,
-}
-
-pub struct Game {
-    pub id: Uuid,
-    pub player_number: PlayerNumber,
-    pub player1_scores: Vec<PlayerScore>,
-    pub player2_scores: Vec<PlayerScore>,
-}
-
-pub enum PlayerNumber {
-    One,
-    Two,
-}
-
-impl PlayerNumber {
-    fn next(&mut self) {
-        match self {
-            PlayerNumber::One => PlayerNumber::Two,
-            PlayerNumber::Two => PlayerNumber::One,
-        };
-    }
-
-    fn previous(&mut self) {
-        match self {
-            PlayerNumber::One => PlayerNumber::Two,
-            PlayerNumber::Two => PlayerNumber::One,
-        };
-    }
-
-    pub fn name(&self) -> &str {
-        match self {
-            PlayerNumber::One => "Player1",
-            PlayerNumber::Two => "Player2",
-        }
-    }
 }
 
 pub struct CountScoreParameters<G, S>

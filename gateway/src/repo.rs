@@ -1,22 +1,18 @@
 use std::sync::Arc;
 
-use crate::referee::{DeleteScore, DeleteScoreParameters, SaveScore, SaveScoreParameters};
+use crate::referee::{DeleteScore, DeleteScoreParameters, SaveScoreParameters};
 use crate::PlayerScore;
 use dataspine::InsertScoreParameters;
 use score_tracker::{AddScore, Score};
 use uuid::Uuid;
 
-use crate::{
-    max_game_score,
-    referee::{CreateGame, Game, GetGame, PlayerNumber},
-    Error,
-};
+use crate::{max_game_score, referee, Error, Game, PlayerNumber};
 
 pub struct Repo {
     pool: Arc<sqlx::Pool<sqlx::postgres::Postgres>>,
 }
 
-impl CreateGame for Repo {
+impl referee::CreateGame for Repo {
     async fn create_game(&self) -> Result<Game, Error> {
         let mut conn = self.pool.acquire().await?;
 
@@ -31,7 +27,7 @@ impl CreateGame for Repo {
     }
 }
 
-impl GetGame for Repo {
+impl referee::GetGame for Repo {
     async fn find_game(&self, game_id: Uuid) -> Result<Game, Error> {
         let mut conn = self.pool.acquire().await?;
 
@@ -77,7 +73,7 @@ impl GetGame for Repo {
     }
 }
 
-impl SaveScore for Repo {
+impl referee::SaveScore for Repo {
     async fn save_score(&self, parameters: SaveScoreParameters) -> Result<(), Error> {
         let SaveScoreParameters {
             game_id,
