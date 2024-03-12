@@ -1,36 +1,33 @@
 ## Create database
 
 ```
-sqlx database create --database-url=postgres://postgres:$PG_PASS@localhost/darts
-sqlx database create --database-url=postgres://postgres:$PG_PASS@localhost/darts_test
+sqlx database create --database-url=$DEV_DATABASE_URL
+sqlx database create --database-url=$TEST_DATABASE_URL
 ```
 
 ## Drop database
 
 ```
-sqlx database create --database-url=postgres://postgres:$PG_PASS@localhost/darts
-sqlx database create --database-url=postgres://postgres:$PG_PASS@localhost/darts_test
+sqlx database drop --database-url=$DEV_DATABASE_URL
+sqlx database drop --database-url=$TEST_DATABASE_URL
 ```
 
 ## Run migrations
 
 ```
-sqlx migrate run --database-url=postgres://postgres:$PG_PASS@localhost/darts
-sqlx migrate run --database-url=postgres://postgres:$PG_PASS@localhost/darts_test
+sqlx migrate run --database-url=$DEV_DATABASE_URL
+sqlx migrate run --database-url=$TEST_DATABASE_URL
 ```
 
 ## Revert migrations
 
 ```
-sqlx migrate revert --database-url=postgres://postgres:$PG_PASS@localhost/darts
+sqlx migrate revert --database-url=$DEV_DATABASE_URL
+sqlx migrate revert --database-url=$TEST_DATABASE_URL
 ```
 
 ## Run tests
 
 ```
-DATABASE_URL=postgres://postgres:$PG_PASS@localhost/darts_test cargo test --package dataspine --test create_game_test -- it_creats_game --exact --nocapture
-```
-
-```
-DATABASE_URL=postgres://postgres:$PG_PASS@localhost/darts_test cargo test --package dataspine
+DATABASE_URL=$TEST_DATABASE_URL cargo test
 ```
