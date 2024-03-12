@@ -101,13 +101,41 @@ where
     pub games: Arc<G>,
 }
 
-pub async fn new_game<G>(parameters: NewGameParameters<G>) -> Result<Game, Error>
+pub async fn cancel_score<G, S>(parameters: CancelScoreParameters<G, S>) -> Result<Game, Error>
 where
-    G: CreateGame,
+    G: GetGame,
+    S: DeleteScore,
 {
-    let NewGameParameters { games } = parameters;
+    let CancelScoreParameters {
+        game_id,
+        games,
+        scores,
+    } = parameters;
 
-    let game = games.create_game().await?;
+    let mut game = games.find_game(game_id).await?;
+
+    let (player_name, turn_number) = match game.player_number {
+        PlayerNumber::One => {
+            let data = ("Player1".to_string(), game.player1_scores.len() + 1);
+            game.player1_scores.pop();
+            data
+        }
+        PlayerNumber::Two => {
+            let data = ("Player2".to_string(), game.player2_scores.len() + 1);
+            game.player2_scores.pop();
+            data
+        }
+    };
+
+    scores
+        .delete_score(DeleteScoreParameters {
+            game_id,
+            player_name: &player_name,
+            turn_number: turn_number.try_into().map_err(eyre::Report::new)?,
+        })
+        .await?;
+
+    game.player_number.previous();
 
     Ok(game)
 }
@@ -152,41 +180,13 @@ where
     Ok(game)
 }
 
-pub async fn cancel_score<G, S>(parameters: CancelScoreParameters<G, S>) -> Result<Game, Error>
+pub async fn new_game<G>(parameters: NewGameParameters<G>) -> Result<Game, Error>
 where
-    G: GetGame,
-    S: DeleteScore,
+    G: CreateGame,
 {
-    let CancelScoreParameters {
-        game_id,
-        games,
-        scores,
-    } = parameters;
+    let NewGameParameters { games } = parameters;
 
-    let mut game = games.find_game(game_id).await?;
-
-    let (player_name, turn_number) = match game.player_number {
-        PlayerNumber::One => {
-            let data = ("Player1".to_string(), game.player1_scores.len() + 1);
-            game.player1_scores.pop();
-            data
-        }
-        PlayerNumber::Two => {
-            let data = ("Player2".to_string(), game.player2_scores.len() + 1);
-            game.player2_scores.pop();
-            data
-        }
-    };
-
-    scores
-        .delete_score(DeleteScoreParameters {
-            game_id,
-            player_name: &player_name,
-            turn_number: turn_number.try_into().map_err(eyre::Report::new)?,
-        })
-        .await?;
-
-    game.player_number.previous();
+    let game = games.create_game().await?;
 
     Ok(game)
 }
