@@ -1,7 +1,13 @@
+# frozen_string_literal: true
+
 require 'sinatra'
+require_relative './games_api'
+require_relative './game_list_item'
 
 get '/' do
-  erb :home
+  games = GamesApi.new.list_games.games.map { |game| GameListItem.new(game) }
+
+  erb :home, locals: {games: games}
 end
 
 get '/games/:game_id' do
@@ -9,11 +15,11 @@ get '/games/:game_id' do
 end
 
 post '/games/:game_id/add_score' do
-  erb :scores, :layout => false
+  erb :scores, layout: false
 end
 
 post '/games/:game_id/cancel_score' do
-  erb :scores, :layout => false
+  erb :scores, layout: false
 end
 
 post '/games' do

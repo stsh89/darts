@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
-gem "sinatra", "~> 4.0"
-gem "puma", "~> 6.4"
+gem 'google-protobuf'
+gem 'grpc'
+gem 'grpc-tools'
+gem 'puma', '~> 6.4'
+gem 'sinatra', '~> 4.0'
 
 group :development do
-  gem "ruby-lsp"
-  gem "rubocop"
+  gem 'rubocop'
+  gem 'ruby-lsp'
 end

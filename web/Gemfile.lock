@@ -3,6 +3,17 @@ GEM
   specs:
     ast (2.4.2)
     base64 (0.2.0)
+    google-protobuf (3.25.3)
+    google-protobuf (3.25.3-x86_64-linux)
+    googleapis-common-protos-types (1.13.0)
+      google-protobuf (~> 3.18)
+    grpc (1.62.0)
+      google-protobuf (~> 3.25)
+      googleapis-common-protos-types (~> 1.0)
+    grpc (1.62.0-x86_64-linux)
+      google-protobuf (~> 3.25)
+      googleapis-common-protos-types (~> 1.0)
+    grpc-tools (1.62.0)
     json (2.7.1)
     language_server-protocol (3.17.0.3)
     mustermann (3.0.0)
@@ -59,6 +70,9 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  google-protobuf
+  grpc
+  grpc-tools
   puma (~> 6.4)
   rubocop
   ruby-lsp

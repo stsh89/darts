@@ -1,0 +1,19 @@
+<h1 class="title">Recent games</h1>
+
+<div class="block">
+  <form action="/games" method="post">
+    <div class="field">
+      <div class="control">
+        <button class="button" type="submit" autofocus="true">New game</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="block">
+  <ul>
+    <% games.each do |game| %>
+    <li><a href="/games/<%= game.id %>"><%= game.start_time %></a></li>
+    <% end %>
+  </ul>
+</div>
