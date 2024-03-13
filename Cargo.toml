@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = [ "cli", "gateway", "dataspine","score_tracker", "web"]
+members = [ "cli", "gateway", "dataspine","score_tracker", "api"]
 
 [workspace.dependencies]
 anyhow = "1.0.80"

@@ -1,0 +1,16 @@
+[package]
+name = "api"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = { workspace = true }
+axum = "0.7.4"
+tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread", "sync"] }
+sqlx = { workspace = true }
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.114"
+gateway = { path = "../gateway" }
+uuid = { workspace = true }
