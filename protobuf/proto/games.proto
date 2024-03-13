@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package proto.games;
+
+service Games {
+    rpc ListGames (ListGamesRequest) returns (ListGamesResponse);
+}
+
+message ListGamesRequest {
+}
+
+message ListGamesResponse {
+    repeated Game games = 1;
+}
+
+message Game {
+    string id = 1;
+
+    google.protobuf.Timestamp start_time = 2;
+}

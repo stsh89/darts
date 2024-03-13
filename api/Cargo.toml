@@ -14,3 +14,8 @@ serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.114"
 gateway = { path = "../gateway" }
 uuid = { workspace = true }
+tonic = "0.11.0"
+
+[build-dependencies]
+tonic-build = { version = "0.11" }
+anyhow = { workspace = true }

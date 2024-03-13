@@ -10,6 +10,10 @@ use serde::Deserialize;
 use sqlx::postgres::PgPoolOptions;
 use std::sync::Arc;
 
+pub mod rpc {
+    tonic::include_proto!("proto.games"); // The string specified here must match the proto package name
+}
+
 #[derive(Deserialize)]
 struct Config {
     database: DatabaseConfig,
