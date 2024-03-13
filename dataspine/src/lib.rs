@@ -146,7 +146,7 @@ INSERT INTO playground.scores (
 pub async fn list_games(conn: &mut PgConnection) -> Result<Vec<Game>, Error> {
     let games = sqlx::query_as!(
         Game,
-        r#"SELECT id, insert_time FROM playground.games LIMIT 10"#
+        r#"SELECT id, insert_time FROM playground.games ORDER BY insert_time DESC LIMIT 10"#
     )
     .fetch_all(conn)
     .await?;

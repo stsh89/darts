@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, insert_time FROM playground.games LIMIT 10",
+  "query": "SELECT id, insert_time FROM playground.games ORDER BY insert_time DESC LIMIT 10",
   "describe": {
     "columns": [
       {
@@ -22,5 +22,5 @@
       false
     ]
   },
-  "hash": "cca7969ed2e8a9807c61e70c9e74f8b1f586f1240c2d64577472f38de5df878d"
+  "hash": "b3fb1c7ddd38746e9dc42179cdc38c7f8e5bced2da5e3022067de035c4cab122"
 }

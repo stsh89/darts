@@ -1,0 +1,6 @@
+{
+  "database": {
+    "max_connections": 5,
+    "url": "postgres://postgres:bluesky958@localhost:5432/darts_dev"
+  }
+}

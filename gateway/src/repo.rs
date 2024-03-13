@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::referee::{DeleteScore, DeleteScoreParameters, SaveScoreParameters};
-use crate::PlayerScore;
+use crate::{spectator, PlayerScore};
 use dataspine::InsertScoreParameters;
 use score_tracker::{AddScore, Score};
 use uuid::Uuid;
@@ -10,6 +10,24 @@ use crate::{max_game_score, referee, Error, Game, PlayerNumber};
 
 pub struct Repo {
     pool: Arc<sqlx::Pool<sqlx::postgres::Postgres>>,
+}
+
+impl spectator::ListGames for Repo {
+    async fn list_games(&self) -> Result<Vec<Game>, Error> {
+        let mut conn = self.pool.acquire().await?;
+
+        let games = dataspine::list_games(&mut conn).await?;
+
+        Ok(games
+            .into_iter()
+            .map(|game| Game {
+                id: game.id,
+                player_number: PlayerNumber::One,
+                player1_scores: vec![],
+                player2_scores: vec![],
+            })
+            .collect())
+    }
 }
 
 impl referee::CreateGame for Repo {
@@ -27,18 +45,15 @@ impl referee::CreateGame for Repo {
     }
 }
 
-impl referee::GetGame for Repo {
-    async fn find_game(&self, game_id: Uuid) -> Result<Game, Error> {
+impl crate::GetGame for Repo {
+    async fn get_game(&self, game_id: Uuid) -> Result<Game, Error> {
         let mut conn = self.pool.acquire().await?;
 
         let (game, scores) = dataspine::find_game(&mut conn, game_id)
             .await?
             .ok_or(Error::NotFound("Game not found".to_string()))?;
 
-        let mut scores = scores
-            .into_iter()
-            .filter(|score| score.player_name == "Player1")
-            .collect::<Vec<dataspine::Score>>();
+        let mut scores = scores.into_iter().collect::<Vec<dataspine::Score>>();
 
         scores.sort_by_key(|score| score.turn_number);
 
@@ -132,5 +147,11 @@ impl From<sqlx::Error> for Error {
 impl From<dataspine::Error> for Error {
     fn from(error: dataspine::Error) -> Self {
         Error::DataAccess(error.into())
+    }
+}
+
+impl Repo {
+    pub fn new(pool: Arc<sqlx::Pool<sqlx::postgres::Postgres>>) -> Self {
+        Self { pool }
     }
 }

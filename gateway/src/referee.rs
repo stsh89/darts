@@ -1,4 +1,4 @@
-use crate::{Error, Game, PlayerNumber};
+use crate::{Error, Game, GetGame, PlayerNumber};
 use score_tracker::{self, AddScore, GameScore};
 use std::sync::Arc;
 use uuid::Uuid;
@@ -8,11 +8,6 @@ pub use score_tracker::{PlayerScore, Score};
 pub trait CreateGame {
     #[allow(async_fn_in_trait)]
     async fn create_game(&self) -> Result<Game, Error>;
-}
-
-pub trait GetGame {
-    #[allow(async_fn_in_trait)]
-    async fn find_game(&self, game_id: Uuid) -> Result<Game, Error>;
 }
 
 pub trait SaveScore {
@@ -77,7 +72,7 @@ where
         scores,
     } = parameters;
 
-    let mut game = games.find_game(game_id).await?;
+    let mut game = games.get_game(game_id).await?;
 
     let (player_name, turn_number) = match game.player_number {
         PlayerNumber::One => {
@@ -117,7 +112,7 @@ where
         scores,
     } = parameters;
 
-    let mut game = games.find_game(game_id).await?;
+    let mut game = games.get_game(game_id).await?;
     let score_to_save = score.value();
 
     let (player_name, turn_number) = match game.player_number {

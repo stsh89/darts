@@ -2,9 +2,14 @@ pub mod referee;
 pub mod repo;
 pub mod spectator;
 
-pub use score_tracker::{GameScore, PlayerScore};
+pub use score_tracker::{GameScore, PlayerScore, TotalGameScore};
 
 use uuid::Uuid;
+
+pub trait GetGame {
+    #[allow(async_fn_in_trait)]
+    async fn get_game(&self, game_id: Uuid) -> Result<Game, Error>;
+}
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -31,14 +36,14 @@ pub struct Game {
 
 impl PlayerNumber {
     fn next(&mut self) {
-        match self {
+        *self = match self {
             PlayerNumber::One => PlayerNumber::Two,
             PlayerNumber::Two => PlayerNumber::One,
         };
     }
 
     fn previous(&mut self) {
-        match self {
+        *self = match self {
             PlayerNumber::One => PlayerNumber::Two,
             PlayerNumber::Two => PlayerNumber::One,
         };

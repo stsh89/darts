@@ -27,9 +27,22 @@ impl Score {
     }
 }
 
+impl PlayerScore {
+    pub fn into_inner(&self) -> u8 {
+        match self {
+            PlayerScore::Score(score) => score.value(),
+            PlayerScore::Overflow(score) => score.value(),
+        }
+    }
+}
+
 impl GameScore {
     pub fn new(x: u16) -> GameScore {
         GameScore(x)
+    }
+
+    pub fn value(&self) -> u16 {
+        self.0
     }
 }
 
