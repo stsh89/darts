@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 require 'sinatra'
-require_relative './games_api'
-require_relative './game_list_item'
+require_relative './games_service'
 
 get '/' do
-  games = GamesApi.new.list_games.games.map { |game| GameListItem.new(game) }
+  result = GamesService.list_games
+  games = handle_result(result)
 
-  erb :home, locals: {games: games}
+  erb :home, locals: { games: }
 end
 
 get '/games/:game_id' do
@@ -30,4 +30,15 @@ end
 
 error Sinatra::NotFound do
   erb :not_found
+end
+
+def handle_result(result, default_value = [])
+  case result.to_h
+  in {ok: value} then value
+  in {err: error_message}
+    @error_message = error_message
+    default_value
+  else
+    raise Sinatra::Error
+  end
 end

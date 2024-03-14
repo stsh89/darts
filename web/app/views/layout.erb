@@ -12,6 +12,10 @@
       <div class="container">
         <div class="columns is-centered">
           <div class="column is-half">
+            <% if @error_message %>
+            <div class="notification is-danger"><%= @error_message %></div>
+            <% end %>
+
             <%= yield %>
           </div>
         </div>

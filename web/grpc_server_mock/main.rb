@@ -8,7 +8,11 @@ require 'google/protobuf/well_known_types'
 class GamesService < Proto::Games::Games::Service
   def list_games(_request, _call)
     games = [
-      Proto::Games::Game.new(id: 'mocked-id', start_time: Time.now)
+      Proto::Games::Game.new(id: '35523d4d-2eeb-4351-b876-1fa19ec5f835', start_time: Time.new(2024, 3, 14, 14, 0, 0)),
+      Proto::Games::Game.new(id: '35523d4d-2eeb-4351-b876-1fa19ec5f834', start_time: Time.new(2024, 3, 14, 13, 0, 0)),
+      Proto::Games::Game.new(id: '35523d4d-2eeb-4351-b876-1fa19ec5f833', start_time: Time.new(2024, 3, 14, 12, 0, 0)),
+      Proto::Games::Game.new(id: '35523d4d-2eeb-4351-b876-1fa19ec5f832', start_time: Time.new(2024, 3, 14, 11, 0, 0)),
+      Proto::Games::Game.new(id: '35523d4d-2eeb-4351-b876-1fa19ec5f831', start_time: Time.new(2024, 3, 14, 10, 0, 0))
     ]
 
     Proto::Games::ListGamesResponse.new(
