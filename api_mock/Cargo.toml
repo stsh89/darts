@@ -1,5 +1,5 @@
 [package]
-name = "api"
+name = "api_mock"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,16 +7,12 @@ edition = "2021"
 
 [dependencies]
 anyhow = { workspace = true }
-axum = "0.7.4"
-gateway = { path = "../gateway" }
-serde = { version = "1.0.197", features = ["derive"] }
-serde_json = "1.0.114"
-sqlx = { workspace = true }
+chrono = { workspace = true }
 prost = { workspace = true }
 prost-types = { workspace = true }
 tokio = { workspace = true }
 tonic = { workspace = true }
-uuid = { workspace = true }
+uuid = { workspace = true, features = ["v4"] }
 
 [build-dependencies]
 anyhow = { workspace = true }

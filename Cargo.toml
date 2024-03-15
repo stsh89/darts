@@ -1,9 +1,14 @@
 [workspace]
 resolver = "2"
-members = [ "cli", "gateway", "dataspine","score_tracker", "api"]
+members = [ "cli", "gateway", "dataspine","score_tracker", "api", "api_mock"]
 
 [workspace.dependencies]
 anyhow = "1.0.80"
+prost = { version = "0.12" }
+prost-types = { version = "0.12" }
 sqlx = { version = "0.7.3", features = ["postgres", "runtime-tokio", "chrono", "uuid"] }
 thiserror = "1.0.57"
+tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread", "sync"] }
+tonic = "0.11.0"
 uuid = "1.7.0"
+chrono = "0.4.35"

@@ -8,8 +8,19 @@ class GamesApi
     @stub = Proto::Playground::Games::Stub.new('[::1]:50051', :this_channel_is_insecure)
   end
 
+  def count_points(game_id:, points:)
+    @stub.count_points(
+      Proto::Playground::CountPointsRequest.new(
+        game_id:,
+        points:
+      )
+    )
+  end
+
   def get_game_details(game_id:)
-    @stub.get_game_details(Proto::Playground::GetGameDetailsRequest.new(game_id:))
+    @stub.get_game_details(
+      Proto::Playground::GetGameDetailsRequest.new(game_id:)
+    )
   end
 
   def list_games

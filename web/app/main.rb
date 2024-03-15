@@ -14,13 +14,19 @@ get '/games/:game_id' do
   result = GamesService.get_game_details(game_id: params[:game_id])
   game_details = handle_result(result)
 
-  puts(game_details.player_details[0].name)
-
   erb :scoreboard, locals: { game_details: }
 end
 
-post '/games/:game_id/add_score' do
-  erb :scores, layout: false
+post '/games/:game_id/count_points' do
+  result = GamesService.count_points(game_id: params[:game_id], points: params[:score].to_i)
+  game_details = handle_result(result)
+
+  if game_details.winner.nil?
+    erb :scores, layout: false, locals: { game_details: }
+  else
+    msg = "#{game_details.winner.name} wins in #{game_details.rounds_number} rounds!!!"
+    redirect to("/?msg=#{msg}")
+  end
 end
 
 post '/games/:game_id/cancel_score' do
@@ -34,10 +40,6 @@ post '/games' do
   redirect "/games/#{game.id}"
 rescue StandardError => _e
   erb :internal_server_error
-end
-
-error Sinatra::NotFound do
-  erb :not_found
 end
 
 def handle_result(result, default_value = [])

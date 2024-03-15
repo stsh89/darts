@@ -55,11 +55,11 @@ end
 
 # Round
 class Round
-  attr_reader :number, :points
+  attr_reader :number, :scores
 
   def initialize(proto)
     @number = proto.number
-    @points = proto.points.map { |point| Point.new(point) }
+    @scores = proto.points.map { |point| Point.new(point) }
   end
 end
 
@@ -70,10 +70,11 @@ class Point
   def initialize(proto)
     @value = proto.value
     @kind = proto.kind.to_sym
+    puts(@kind)
   end
 
   def overthrow?
-    kind == :overthrow
+    kind == :POINT_KIND_OVERTHROW
   end
 end
 

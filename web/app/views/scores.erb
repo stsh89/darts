@@ -1,9 +1,28 @@
-<table class="table is-fullwidth is-striped">
-  <thead>
-    <tr><th>#</th><th>Player1 / 288</th><th>Player2 / 288</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>2</td><td>18</td><td>31</td></tr>
-    <tr><td>1</td><td>44</td><td></td></tr>
-  </tbody>
-</table>
+<% if game_details.winner %>
+<h1 class="title"><%= game_details.winner.name %> wins in <%= game_details.rounds_number %> rounds!!!</h1>
+<% else %>
+<h1 class="title"><%= game_details.player %> / <%= game_details.player_points_to_win %></h1>
+<% end %>
+
+<div class="block is-size-5">
+  <table class="table is-fullwidth is-striped">
+    <thead>
+      <tr>
+        <th>#</th>
+        <% game_details.player_details.each do |player| %>
+            <th><%= player.name %> / <%= player.points_to_win %></th>
+        <% end %>
+      </tr>
+    </thead>
+    <tbody>
+      <% game_details.rounds.each do |round| %>
+      <tr>
+        <td><%= round.number %></td>
+        <% round.scores.each do |score| %>
+        <td <%= "class=\"is-danger\"" if score.overthrow? %>><%= score.value %></td>
+        <% end %>
+      </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

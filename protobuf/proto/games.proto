@@ -5,9 +5,19 @@ import "google/protobuf/timestamp.proto";
 package proto.playground;
 
 service Games {
+    rpc CountPoints (CountPointsRequest) returns (CountPointsResponse);
     rpc CreateGame (CreateGameRequest) returns (Game);
     rpc GetGameDetails (GetGameDetailsRequest) returns (GameDetails);
     rpc ListGames (ListGamesRequest) returns (ListGamesResponse);
+}
+
+message CountPointsRequest {
+    string game_id = 1;
+    int32 points = 2;
+}
+
+message CountPointsResponse {
+    GameDetails game_details = 1;
 }
 
 message CreateGameRequest {

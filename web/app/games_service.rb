@@ -38,44 +38,30 @@ end
 # Games service
 class GamesService
   class << self
-    def get_game_details(game_id:)
-      with_resque do
-        game_details = GameDetails.new(GamesApi.new.get_game_details(game_id:))
+    def count_points(game_id:, points:)
+      response = GamesApi.new.count_points(game_id:, points:)
+      game_details = GameDetails.new(response.game_details)
 
-        Result.ok(game_details)
-      end
+      Result.ok(game_details)
+    end
+
+    def get_game_details(game_id:)
+      game_details = GameDetails.new(GamesApi.new.get_game_details(game_id:))
+
+      Result.ok(game_details)
     end
 
     def create_game
-      with_resque do
-        game = Game.new(GamesApi.new.create_game)
+      game = Game.new(GamesApi.new.create_game)
 
-        Result.ok(game)
-      end
+      Result.ok(game)
     end
 
     def list_games
-      with_resque do
-        response = GamesApi.new.list_games
-        games = response.games.map { |proto| Game.new(proto) }
+      response = GamesApi.new.list_games
+      games = response.games.map { |proto| Game.new(proto) }
 
-        Result.ok(games)
-      end
-    end
-
-    private
-
-    def with_resque(&block)
-      block.call
-    rescue StandardError => e
-      case e
-      when GRPC::Unavailable then Result.err('Backend is not available')
-      else
-        warn e
-        warn e.backtrace
-
-        Result.err('Something went wrong')
-      end
+      Result.ok(games)
     end
   end
 end
