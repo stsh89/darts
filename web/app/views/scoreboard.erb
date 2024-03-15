@@ -1,0 +1,74 @@
+
+<% if game_details.winner %>
+<h1 class="title"><%= game_details.winner.name %> wins in <%= game_details.rounds_number %> rounds!!!</h1>
+<% else %>
+<h1 class="title"><%= game_details.player %> / <%= game_details.player_points_to_win %></h1>
+<div class="block">
+  <form class="block" action="/games/<%= game_details.game_id %>/add_score" method="post" autocomplete="off" onsubmit="formSubmit(event, this)">
+    <div class="field">
+      <div class="control">
+        <input class="input" inputmode="numeric" type="text" name="score" pattern="[0-9\+]+" autofocus="true">
+      </div>
+    </div>
+  </form>
+</div>
+<% end %>
+
+<div class="block is-size-5" id="js-scores">
+  <table class="table is-fullwidth is-striped">
+    <thead>
+      <tr>
+        <th>#</th>
+         <% game_details.player_details.each do |player| %>
+            <th><%= player.name %> / <%= player.points_to_win %></th>
+         <% end %>
+      </tr>
+    </thead>
+    <tbody>
+      <% game_details.rounds.each do |round| %>
+      <tr>
+        <td><%= round.number %></td>
+        <% round.scores do |score| %>
+        <td <%= "class=\"is-danger\"" if score.overthrow? %>><%= score.value %></td>
+        <% end %>
+      </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<div class="block has-text-right">
+  <form action="/games/1/cancel_score" method="post" onsubmit="formSubmit(event, this)">
+    <div class="field">
+      <div class="control">
+        <button class="button is-danger" type="submit">Cancel score</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+  async function formSubmit(e, form) {
+    e.preventDefault();
+
+    const response = await fetch(form.action, {method: 'post', body: new FormData(form)});
+    const scores = document.getElementById('js-scores');
+    scores.innerHTML = await response.text();
+  }
+
+  async function addScore(e, form) {
+    e.preventDefault();
+
+    const response = await fetch(form.action, {method: 'post', body: new FormData(form)});
+    const scores = document.getElementById('js-scores');
+    scores.innerHTML = await response.text();
+  }
+
+  async function cancelScore(e, form) {
+    e.preventDefault();
+
+    const response = await fetch(form.action, {method: 'post'});
+    const scores = document.getElementById('js-scores');
+    scores.innerHTML = await response.text();
+  }
+</script>

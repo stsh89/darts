@@ -7,7 +7,7 @@ require 'google/protobuf'
 require 'google/protobuf/timestamp_pb'
 
 
-descriptor_data = "\n\x11proto/games.proto\x12\x0bproto.games\x1a\x1fgoogle/protobuf/timestamp.proto\"\x12\n\x10ListGamesRequest\"5\n\x11ListGamesResponse\x12 \n\x05games\x18\x01 \x03(\x0b\x32\x11.proto.games.Game\"B\n\x04Game\x12\n\n\x02id\x18\x01 \x01(\t\x12.\n\nstart_time\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp2S\n\x05Games\x12J\n\tListGames\x12\x1d.proto.games.ListGamesRequest\x1a\x1e.proto.games.ListGamesResponseb\x06proto3"
+descriptor_data = "\n\x11proto/games.proto\x12\x10proto.playground\x1a\x1fgoogle/protobuf/timestamp.proto\"\x13\n\x11\x43reateGameRequest\"(\n\x15GetGameDetailsRequest\x12\x0f\n\x07game_id\x18\x01 \x01(\t\"\x12\n\x10ListGamesRequest\":\n\x11ListGamesResponse\x12%\n\x05games\x18\x01 \x03(\x0b\x32\x16.proto.playground.Game\"B\n\x04Game\x12\n\n\x02id\x18\x01 \x01(\t\x12.\n\nstart_time\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\xbe\x01\n\x0bGameDetails\x12\x0f\n\x07game_id\x18\x01 \x01(\t\x12\x0e\n\x06winner\x18\x02 \x01(\t\x12\x0e\n\x06player\x18\x03 \x01(\t\x12\x1c\n\x14player_points_to_win\x18\x04 \x01(\x05\x12\'\n\x06rounds\x18\x05 \x03(\x0b\x32\x17.proto.playground.Round\x12\x37\n\x0eplayer_details\x18\x06 \x03(\x0b\x32\x1f.proto.playground.PlayerDetails\"4\n\rPlayerDetails\x12\x15\n\rpoints_to_win\x18\x01 \x01(\x05\x12\x0c\n\x04name\x18\x02 \x01(\t\"@\n\x05Round\x12\x0e\n\x06number\x18\x01 \x01(\x05\x12\'\n\x06points\x18\x02 \x03(\x0b\x32\x17.proto.playground.Point\"A\n\x05Point\x12\r\n\x05value\x18\x01 \x01(\x05\x12)\n\x04kind\x18\x02 \x01(\x0e\x32\x1b.proto.playground.PointKind*Q\n\tPointKind\x12\x14\n\x10POINT_KIND_UNSET\x10\x00\x12\x14\n\x10POINT_KIND_SCORE\x10\x01\x12\x18\n\x14POINT_KIND_OVERTHROW\x10\x02\x32\x82\x02\n\x05Games\x12I\n\nCreateGame\x12#.proto.playground.CreateGameRequest\x1a\x16.proto.playground.Game\x12X\n\x0eGetGameDetails\x12\'.proto.playground.GetGameDetailsRequest\x1a\x1d.proto.playground.GameDetails\x12T\n\tListGames\x12\".proto.playground.ListGamesRequest\x1a#.proto.playground.ListGamesResponseb\x06proto3"
 
 pool = Google::Protobuf::DescriptorPool.generated_pool
 
@@ -35,9 +35,16 @@ rescue TypeError
 end
 
 module Proto
-  module Games
-    ListGamesRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("proto.games.ListGamesRequest").msgclass
-    ListGamesResponse = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("proto.games.ListGamesResponse").msgclass
-    Game = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("proto.games.Game").msgclass
+  module Playground
+    CreateGameRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("proto.playground.CreateGameRequest").msgclass
+    GetGameDetailsRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("proto.playground.GetGameDetailsRequest").msgclass
+    ListGamesRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("proto.playground.ListGamesRequest").msgclass
+    ListGamesResponse = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("proto.playground.ListGamesResponse").msgclass
+    Game = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("proto.playground.Game").msgclass
+    GameDetails = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("proto.playground.GameDetails").msgclass
+    PlayerDetails = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("proto.playground.PlayerDetails").msgclass
+    Round = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("proto.playground.Round").msgclass
+    Point = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("proto.playground.Point").msgclass
+    PointKind = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("proto.playground.PointKind").enummodule
   end
 end

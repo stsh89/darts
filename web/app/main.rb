@@ -11,7 +11,12 @@ get '/' do
 end
 
 get '/games/:game_id' do
-  erb :game
+  result = GamesService.get_game_details(game_id: params[:game_id])
+  game_details = handle_result(result)
+
+  puts(game_details.player_details[0].name)
+
+  erb :scoreboard, locals: { game_details: }
 end
 
 post '/games/:game_id/add_score' do
@@ -23,9 +28,12 @@ post '/games/:game_id/cancel_score' do
 end
 
 post '/games' do
-  game_id = 1
+  result = GamesService.create_game
+  game = handle_result(result)
 
-  redirect "/games/#{game_id}"
+  redirect "/games/#{game.id}"
+rescue StandardError => _e
+  erb :internal_server_error
 end
 
 error Sinatra::NotFound do

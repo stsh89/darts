@@ -2,6 +2,7 @@
 
 require_relative './games_api'
 require_relative './game'
+require_relative './game_details'
 
 # Result
 class Result
@@ -37,10 +38,26 @@ end
 # Games service
 class GamesService
   class << self
+    def get_game_details(game_id:)
+      with_resque do
+        game_details = GameDetails.new(GamesApi.new.get_game_details(game_id:))
+
+        Result.ok(game_details)
+      end
+    end
+
+    def create_game
+      with_resque do
+        game = Game.new(GamesApi.new.create_game)
+
+        Result.ok(game)
+      end
+    end
+
     def list_games
       with_resque do
         response = GamesApi.new.list_games
-        games = response.games.map { |game| Game.new(game) }
+        games = response.games.map { |proto| Game.new(proto) }
 
         Result.ok(games)
       end

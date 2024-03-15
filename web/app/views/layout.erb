@@ -12,8 +12,10 @@
       <div class="container">
         <div class="columns is-centered">
           <div class="column is-half">
+            <div class="block"><a href="/">Home</a></div>
+
             <% if @error_message %>
-            <div class="notification is-danger"><%= @error_message %></div>
+            <div class="block"><div class="notification is-danger"><%= @error_message %></div></div>
             <% end %>
 
             <%= yield %>
