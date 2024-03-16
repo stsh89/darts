@@ -38,6 +38,13 @@ end
 # Games service
 class GamesService
   class << self
+    def cancel_last_score(game_id:)
+      response = GamesApi.new.cancel_last_score(game_id:)
+      game_details = GameDetails.new(response.game_details)
+
+      Result.ok(game_details)
+    end
+
     def count_points(game_id:, points:)
       response = GamesApi.new.count_points(game_id:, points:)
       game_details = GameDetails.new(response.game_details)

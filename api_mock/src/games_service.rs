@@ -75,6 +75,44 @@ struct PlayerDetails {
 
 #[tonic::async_trait]
 impl rpc::games_server::Games for GamesService {
+    async fn cancel_last_score(
+        &self,
+        request: Request<rpc::CancelLastScoreRequest>,
+    ) -> Result<Response<rpc::CancelLastScoreResponse>, Status> {
+        let rpc::CancelLastScoreRequest { game_id } = request.into_inner();
+
+        let game_id = Uuid::parse_str(&game_id)
+            .map_err(|_err| Status::invalid_argument("Invalid game id"))?;
+
+        let mut games = self.games.write().await;
+        let game = games.get_mut(&game_id);
+
+        let Some(mut game) = game.cloned() else {
+            return Err(Status::not_found("Game not found"));
+        };
+
+        let scores = game
+            .scores
+            .get_mut(&game.player.name())
+            .expect("Player should have scores");
+        scores.pop();
+
+        game.player.next();
+
+        game.update_player_details();
+        game.remove_last_round_points();
+        games.insert(game_id, game.clone());
+
+        let proto = game
+            .clone()
+            .try_into()
+            .map_err(|_err| Status::internal("Error"))?;
+
+        Ok(Response::new(rpc::CancelLastScoreResponse {
+            game_details: Some(proto),
+        }))
+    }
+
     async fn count_points(
         &self,
         request: Request<rpc::CountPointsRequest>, // Accept request of type HelloRequest
@@ -267,6 +305,18 @@ impl Game {
         match self.player {
             Player::One => self.player_points_to_win = 301 - player1_scores.iter().sum::<u16>(),
             Player::Two => self.player_points_to_win = 301 - player2_scores.iter().sum::<u16>(),
+        }
+    }
+
+    pub fn remove_last_round_points(&mut self) {
+        let round = self.rounds.last_mut();
+
+        if let Some(round) = round {
+            if round.points.len() == 2 {
+                round.points.pop();
+            } else {
+                self.rounds.pop();
+            }
         }
     }
 

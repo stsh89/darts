@@ -2,7 +2,7 @@
 
 <% unless game_details.winner %>
 <div class="block">
-  <form class="block" action="/games/<%= game_details.game_id %>/count_points" method="post" autocomplete="off" onsubmit="formSubmit(event, this)">
+  <form class="block" action="/games/<%= game_details.game_id %>/count_points" method="post" autocomplete="off" onsubmit="countPoints(event, this)">
     <div class="field">
       <div class="control">
         <input class="input" inputmode="numeric" type="text" name="score" pattern="[0-9\+]+" autofocus="true">
@@ -17,17 +17,17 @@
 </div>
 
 <div class="block has-text-right">
-  <form action="/games/1/cancel_score" method="post" onsubmit="formSubmit(event, this)">
+  <form action="/games/<%= game_details.game_id %>/cancel_last_score" method="post" onsubmit="cancelLastScore(event, this)">
     <div class="field">
       <div class="control">
-        <button class="button is-danger" type="submit">Cancel score</button>
+        <button class="button is-danger" type="submit">Cancel last score</button>
       </div>
     </div>
   </form>
 </div>
 
 <script>
-  async function formSubmit(e, form) {
+  async function countPoints(e, form) {
     e.preventDefault();
 
     const response = await fetch(form.action, {method: 'post', body: new FormData(form)});
@@ -35,10 +35,22 @@
     if (response.redirected) {
         window.location.href = response.url;
     } else {
-        const scores = document.getElementById('js-scores');
-        scores.innerHTML = await response.text();
+        scoresElement().innerHTML = await response.text();
 
         form.reset();
     }
+  }
+
+  async function cancelLastScore(e, form) {
+    e.preventDefault();
+
+    const response = await fetch(form.action, {method: 'post'});
+    scoresElement().innerHTML = await response.text();
+
+    form.reset();
+  }
+
+  function scoresElement() {
+    return document.getElementById('js-scores');
   }
 </script>

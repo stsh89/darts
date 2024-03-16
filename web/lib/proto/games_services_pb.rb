@@ -15,6 +15,7 @@ module Proto
         self.unmarshal_class_method = :decode
         self.service_name = 'proto.playground.Games'
 
+        rpc :CancelLastScore, ::Proto::Playground::CancelLastScoreRequest, ::Proto::Playground::CancelLastScoreResponse
         rpc :CountPoints, ::Proto::Playground::CountPointsRequest, ::Proto::Playground::CountPointsResponse
         rpc :CreateGame, ::Proto::Playground::CreateGameRequest, ::Proto::Playground::Game
         rpc :GetGameDetails, ::Proto::Playground::GetGameDetailsRequest, ::Proto::Playground::GameDetails

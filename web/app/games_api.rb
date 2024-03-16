@@ -8,6 +8,12 @@ class GamesApi
     @stub = Proto::Playground::Games::Stub.new('[::1]:50051', :this_channel_is_insecure)
   end
 
+  def cancel_last_score(game_id:)
+    @stub.cancel_last_score(
+      Proto::Playground::CancelLastScoreRequest.new(game_id:)
+    )
+  end
+
   def count_points(game_id:, points:)
     @stub.count_points(
       Proto::Playground::CountPointsRequest.new(

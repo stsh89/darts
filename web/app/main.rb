@@ -18,7 +18,8 @@ get '/games/:game_id' do
 end
 
 post '/games/:game_id/count_points' do
-  result = GamesService.count_points(game_id: params[:game_id], points: params[:score].to_i)
+  points = params[:score].to_i
+  result = GamesService.count_points(game_id: params[:game_id], points:)
   game_details = handle_result(result)
 
   if game_details.winner
@@ -28,8 +29,11 @@ post '/games/:game_id/count_points' do
   end
 end
 
-post '/games/:game_id/cancel_score' do
-  erb :scores, layout: false
+post '/games/:game_id/cancel_last_score' do
+  result = GamesService.cancel_last_score(game_id: params[:game_id])
+  game_details = handle_result(result)
+
+  erb :scores, layout: false, locals: { game_details: }
 end
 
 post '/games' do
