@@ -70,7 +70,6 @@ class Point
   def initialize(proto)
     @value = proto.value
     @kind = proto.kind.to_sym
-    puts(@kind)
   end
 
   def overthrow?

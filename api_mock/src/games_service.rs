@@ -206,7 +206,7 @@ impl TryFrom<Game> for rpc::GameDetails {
             winner: value.winner.unwrap_or_default(),
             player: value.player.name(),
             player_points_to_win: value.player_points_to_win.into(),
-            rounds: value.rounds.into_iter().map(Into::into).collect(),
+            rounds: value.rounds.into_iter().rev().map(Into::into).collect(),
             player_details: value.player_details.into_iter().map(Into::into).collect(),
         })
     }

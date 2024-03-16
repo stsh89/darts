@@ -21,11 +21,10 @@ post '/games/:game_id/count_points' do
   result = GamesService.count_points(game_id: params[:game_id], points: params[:score].to_i)
   game_details = handle_result(result)
 
-  if game_details.winner.nil?
-    erb :scores, layout: false, locals: { game_details: }
+  if game_details.winner
+    redirect "/games/#{game_details.game_id}"
   else
-    msg = "#{game_details.winner.name} wins in #{game_details.rounds_number} rounds!!!"
-    redirect to("/?msg=#{msg}")
+    erb :scores, layout: false, locals: { game_details: }
   end
 end
 

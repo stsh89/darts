@@ -12,12 +12,6 @@
       <div class="container">
         <div class="columns is-centered">
           <div class="column is-half">
-            <% if params[:msg] %>
-            <div class="block"><div class="notification is-info"><strong><%= params[:msg] %></strong></div></div>
-            <% end %>
-
-            <div class="block"><a href="/">Home</a></div>
-
             <%= yield %>
           </div>
         </div>
