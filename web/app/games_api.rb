@@ -1,5 +1,5 @@
-require '/home/ironman/github/stsh89/darts/web/lib/proto/games_pb'
-require '/home/ironman/github/stsh89/darts/web/lib/proto/games_services_pb'
+require 'proto/games_pb'
+require 'proto/games_services_pb'
 require 'google/protobuf/well_known_types'
 
 # Games API
