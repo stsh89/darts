@@ -1,45 +1,30 @@
 use crate::helpers;
-use dataspine::{delete_score, DeleteScoreParameters};
+use dataspine::Repo;
+use playground::referee::DeleteScore;
 use sqlx::PgPool;
+use uuid::Uuid;
 
 #[sqlx::test(fixtures("games"))]
 async fn it_deletes_score(pool: PgPool) -> anyhow::Result<()> {
-    let mut conn = pool.acquire().await?;
-
-    let game_id = helpers::get_game_id(&mut conn).await?;
-
-    let result = delete_score(
-        &mut conn,
-        DeleteScoreParameters {
-            game_id,
-            player_name: "Player1",
-            turn_number: 1,
-        },
-    )
-    .await;
+    let was = helpers::count_scores(&pool).await?;
+    let score_id = helpers::get_score_id(&pool).await?;
+    let result = Repo::new(pool.clone()).delete_score(score_id).await;
+    let now = helpers::count_scores(&pool).await?;
 
     assert!(result.is_ok());
+    assert_eq!(was - now, 1);
 
     Ok(())
 }
 
 #[sqlx::test(fixtures("games"))]
 async fn it_does_not_delete_score(pool: PgPool) -> anyhow::Result<()> {
-    let mut conn = pool.acquire().await?;
+    let was = helpers::count_scores(&pool).await?;
+    let result = Repo::new(pool.clone()).delete_score(Uuid::nil()).await;
+    let now = helpers::count_scores(&pool).await?;
 
-    let game_id = helpers::get_game_id(&mut conn).await?;
-
-    let result = delete_score(
-        &mut conn,
-        DeleteScoreParameters {
-            game_id,
-            player_name: "Player10",
-            turn_number: 102,
-        },
-    )
-    .await;
-
-    assert!(result.is_err());
+    assert!(result.is_ok());
+    assert_eq!(was, now);
 
     Ok(())
 }

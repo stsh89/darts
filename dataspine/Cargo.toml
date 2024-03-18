@@ -8,6 +8,8 @@ edition = "2021"
 [dependencies]
 anyhow = { workspace = true }
 chrono = { workspace = true }
+eyre = { workspace = true }
+playground = { workspace = true }
+sqlx = { workspace = true }
 thiserror = { workspace = true }
 uuid = { workspace = true }
-sqlx = { workspace = true }

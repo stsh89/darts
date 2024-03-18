@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\nINSERT INTO playground.scores (\n    game_id,\n    player_name,\n    score,\n    turn_number\n) VALUES (\n    $1, $2, $3, $4\n) RETURNING id, game_id, player_name, score, turn_number, insert_time\n        ",
+  "query": "\nINSERT INTO playground.scores (\n    game_id,\n    player_number,\n    points_kind,\n    points_number,\n    turn_number\n) VALUES (\n    $1, $2, $3, $4, $5\n) RETURNING id, game_id, player_number, points_kind, points_number, turn_number, insert_time\n        ",
   "describe": {
     "columns": [
       {
@@ -15,21 +15,26 @@
       },
       {
         "ordinal": 2,
-        "name": "player_name",
-        "type_info": "Varchar"
-      },
-      {
-        "ordinal": 3,
-        "name": "score",
+        "name": "player_number",
         "type_info": "Int4"
       },
       {
+        "ordinal": 3,
+        "name": "points_kind",
+        "type_info": "Varchar"
+      },
+      {
         "ordinal": 4,
-        "name": "turn_number",
+        "name": "points_number",
         "type_info": "Int4"
       },
       {
         "ordinal": 5,
+        "name": "turn_number",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
         "name": "insert_time",
         "type_info": "Timestamptz"
       }
@@ -37,6 +42,7 @@
     "parameters": {
       "Left": [
         "Uuid",
+        "Int4",
         "Varchar",
         "Int4",
         "Int4"
@@ -48,8 +54,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "b46ede9fbec13883c59d5be8d8b88afb1e5e58555ce40a5d1470963502b3a37d"
+  "hash": "ddd6e0ce981fb029f8d2f0e15c79740ed8b01004b283bfd52eb5ec086b57015b"
 }

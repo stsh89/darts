@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\nSELECT id, game_id, player_name, score, turn_number, insert_time\nFROM playground.scores\nWHERE game_id = $1\n        ",
+  "query": "\nSELECT id, game_id, player_number, points_kind, points_number, turn_number, insert_time\nFROM playground.scores\nWHERE game_id = $1\nORDER BY turn_number, player_number",
   "describe": {
     "columns": [
       {
@@ -15,21 +15,26 @@
       },
       {
         "ordinal": 2,
-        "name": "player_name",
-        "type_info": "Varchar"
-      },
-      {
-        "ordinal": 3,
-        "name": "score",
+        "name": "player_number",
         "type_info": "Int4"
       },
       {
+        "ordinal": 3,
+        "name": "points_kind",
+        "type_info": "Varchar"
+      },
+      {
         "ordinal": 4,
-        "name": "turn_number",
+        "name": "points_number",
         "type_info": "Int4"
       },
       {
         "ordinal": 5,
+        "name": "turn_number",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
         "name": "insert_time",
         "type_info": "Timestamptz"
       }
@@ -45,8 +50,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "ce4b4537338d6fbb1de215cab219c2df4e30a4ff2fcaa38416483037063e334a"
+  "hash": "159a958c59139ef3493f1583331f1d2aadc9d0468e5ae28955032391b9b5312e"
 }

@@ -1,13 +1,15 @@
-use dataspine::insert_game;
+use crate::helpers::count_games;
+use dataspine::Repo;
+use playground::referee::InsertGame;
 use sqlx::PgPool;
 
 #[sqlx::test]
 async fn it_inserts_game(pool: PgPool) -> anyhow::Result<()> {
-    let mut conn = pool.acquire().await?;
+    let was = count_games(&pool).await?;
+    let _game = Repo::new(pool.clone()).insert_game().await?;
+    let now = count_games(&pool).await?;
 
-    let game = insert_game(&mut conn).await?;
-
-    assert!(!game.id.is_nil());
+    assert_eq!(now - was, 1);
 
     Ok(())
 }

@@ -1,14 +1,13 @@
 [package]
-name = "gateway"
+name = "playground"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-eyre = "0.6.12"
-score_tracker = { path = "../score_tracker" }
-uuid = { workspace = true }
-thiserror = { workspace = true }
-dataspine = { path = "../dataspine" }
+chrono = { workspace = true }
 sqlx = { workspace = true }
+thiserror = { workspace = true }
+uuid = { workspace = true }
+eyre = { workspace = true }
