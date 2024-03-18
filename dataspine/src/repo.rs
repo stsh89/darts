@@ -87,7 +87,7 @@ impl referee::InsertScore for Repo {
             game_id,
             player_number,
             player_score,
-            round_number: turn_number,
+            round_number,
         } = parameters;
 
         let points: Points = player_score.into();
@@ -100,7 +100,7 @@ impl referee::InsertScore for Repo {
                 player_number: player_number.into(),
                 points_kind: points.kind,
                 points_number: points.number,
-                turn_number: turn_number.into(),
+                round_number: round_number.into(),
             })
             .await
             .map_err(|err| Error::Repo(err.into()))?
@@ -125,125 +125,6 @@ impl spectator::ListGames for Repo {
         Ok(games)
     }
 }
-
-// impl plg::spectator::ListGames for Repo {
-//     async fn list_games(&self) -> Result<Vec<plg::Game>, plg::Error> {
-//         self.list_games().await
-//     }
-// }
-
-// impl plg::referee::CreateGame for Repo {
-//     async fn create_game(&self) -> Result<plg::Game, plg::Error> {
-//         self.create_game().await
-//     }
-// }
-
-// impl plg::GetGame for Repo {
-//     async fn get_game(&self, game_id: Uuid) -> Result<plg::GameMain, plg::Error> {
-//         use plg::score_tracker::AddScore;
-
-//         let mut conn = self.conn().await?;
-
-//         let (game, scores) = find_game(&mut conn, game_id)
-//             .await
-//             .map_err(playground_error)?
-//             .ok_or(plg::Error::NotFound("Game not found".to_string()))?;
-
-//         let mut scores = scores.into_iter().collect::<Vec<ScoreRow>>();
-
-//         scores.sort_by_key(|score| score.turn_number);
-
-//         let capacity = scores.len().div_ceil(2) + 1;
-//         let mut player1_scores: Vec<plg::PlayerScore> = Vec::with_capacity(capacity);
-//         let mut player2_scores: Vec<plg::PlayerScore> = Vec::with_capacity(capacity);
-
-//         for score in scores {
-//             let value = score.points_number.try_into().map_err(|_err| {
-//                 plg::Error::UnexpectedError(eyre::eyre!("Failed to convert score"))
-//             })?;
-
-//             if score.player_name == plg::PlayerNumber::One.name() {
-//                 player1_scores.add_score(plg::Score::new(value), &plg::max_game_score());
-//             }
-
-//             if score.player_name == plg::PlayerNumber::Two.name() {
-//                 player2_scores.add_score(plg::Score::new(value), &plg::max_game_score());
-//             }
-//         }
-
-//         let player_number = if player1_scores.len() == player2_scores.len() {
-//             plg::PlayerNumber::One
-//         } else {
-//             plg::PlayerNumber::Two
-//         };
-
-//         Ok(plg::GameMain {
-//             id: game.id,
-//             player_number,
-//             player1_scores,
-//             player2_scores,
-//             start_time: game.insert_time,
-//         })
-//     }
-// }
-
-// impl plg::referee::SaveScore for Repo {
-//     async fn save_score(
-//         &self,
-//         parameters: plg::referee::SaveScoreParameters,
-//     ) -> Result<(), plg::Error> {
-//         let plg::referee::SaveScoreParameters {
-//             game_id,
-//             player_name,
-//             score,
-//             turn_number,
-//         } = parameters;
-
-//         let mut conn = self.conn().await?;
-
-//         insert_score(
-//             &mut conn,
-//             InsertScoreParameters {
-//                 game_id,
-//                 player_name,
-//                 score: score.into(),
-//                 turn_number: turn_number.into(),
-//             },
-//         )
-//         .await
-//         .map_err(playground_error)?;
-
-//         Ok(())
-//     }
-// }
-
-// impl plg::referee::DeleteScore for Repo {
-//     async fn delete_score(
-//         &self,
-//         parameters: plg::referee::DeleteScoreParameters<'_>,
-//     ) -> Result<(), plg::Error> {
-//         let plg::referee::DeleteScoreParameters {
-//             game_id,
-//             player_name,
-//             turn_number,
-//         } = parameters;
-
-//         let mut conn = self.conn().await?;
-
-//         delete_score(
-//             &mut conn,
-//             DeleteScoreParameters {
-//                 game_id,
-//                 player_name,
-//                 turn_number: turn_number.into(),
-//             },
-//         )
-//         .await
-//         .map_err(playground_error)?;
-
-//         Ok(())
-//     }
-// }
 
 impl Repo {
     pub fn new(pool: sqlx::Pool<sqlx::postgres::Postgres>) -> Self {
@@ -282,7 +163,7 @@ impl TryFrom<ScoreRow> for ScoreDetails {
             player_number,
             points_number,
             points_kind,
-            turn_number,
+            round_number,
             insert_time: _,
         } = value;
 
@@ -297,7 +178,9 @@ impl TryFrom<ScoreRow> for ScoreDetails {
             game_id,
             player_number: player_number.try_into()?,
             player_score: score,
-            turn_number: turn_number.try_into().map_err(Into::<eyre::Report>::into)?,
+            round_number: round_number
+                .try_into()
+                .map_err(Into::<eyre::Report>::into)?,
         }))
     }
 }

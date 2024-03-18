@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\nSELECT id, game_id, player_number, points_kind, points_number, turn_number, insert_time\nFROM playground.scores\nWHERE game_id = $1\nORDER BY turn_number, player_number",
+  "query": "\nINSERT INTO playground.scores (\n    game_id,\n    player_number,\n    points_kind,\n    points_number,\n    round_number\n) VALUES (\n    $1, $2, $3, $4, $5\n) RETURNING id, game_id, player_number, points_kind, points_number, round_number, insert_time\n        ",
   "describe": {
     "columns": [
       {
@@ -30,7 +30,7 @@
       },
       {
         "ordinal": 5,
-        "name": "turn_number",
+        "name": "round_number",
         "type_info": "Int4"
       },
       {
@@ -41,7 +41,11 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Uuid",
+        "Int4",
+        "Varchar",
+        "Int4",
+        "Int4"
       ]
     },
     "nullable": [
@@ -54,5 +58,5 @@
       false
     ]
   },
-  "hash": "159a958c59139ef3493f1583331f1d2aadc9d0468e5ae28955032391b9b5312e"
+  "hash": "4783b4b2fabcab16cd565853be2744a6e9b4e2eb1fc92c5d40e184c5221089ad"
 }

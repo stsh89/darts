@@ -19,7 +19,7 @@ pub struct InsertScoreParameters {
     pub player_number: i32,
     pub points_kind: String,
     pub points_number: i32,
-    pub turn_number: i32,
+    pub round_number: i32,
 }
 
 pub struct ScoreRow {
@@ -28,6 +28,6 @@ pub struct ScoreRow {
     pub player_number: i32,
     pub points_number: i32,
     pub points_kind: String,
-    pub turn_number: i32,
+    pub round_number: i32,
     pub insert_time: DateTime<Utc>,
 }

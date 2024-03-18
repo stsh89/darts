@@ -12,7 +12,7 @@ pub struct LoadScoreDetailsParameters {
     pub id: Uuid,
     pub player_number: PlayerNumber,
     pub player_score: PlayerScore,
-    pub turn_number: u8,
+    pub round_number: u8,
 }
 
 impl ScoreDetails {
@@ -26,7 +26,7 @@ impl ScoreDetails {
             id,
             player_number,
             player_score,
-            turn_number: _,
+            round_number: _,
         } = parameters;
 
         Self {

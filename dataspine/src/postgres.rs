@@ -82,7 +82,7 @@ async fn insert_score(
         player_number,
         points_kind,
         points_number,
-        turn_number,
+        round_number,
     } = parameters;
 
     let row = sqlx::query_as!(
@@ -93,16 +93,16 @@ INSERT INTO playground.scores (
     player_number,
     points_kind,
     points_number,
-    turn_number
+    round_number
 ) VALUES (
     $1, $2, $3, $4, $5
-) RETURNING id, game_id, player_number, points_kind, points_number, turn_number, insert_time
+) RETURNING id, game_id, player_number, points_kind, points_number, round_number, insert_time
         "#,
         game_id,
         player_number,
         points_kind,
         points_number,
-        turn_number
+        round_number
     )
     .fetch_one(conn)
     .await?;
@@ -125,10 +125,10 @@ async fn list_scores(conn: &mut PgConnection, game_id: Uuid) -> RowsResult<Score
     let rows = sqlx::query_as!(
         ScoreRow,
         r#"
-SELECT id, game_id, player_number, points_kind, points_number, turn_number, insert_time
+SELECT id, game_id, player_number, points_kind, points_number, round_number, insert_time
 FROM playground.scores
 WHERE game_id = $1
-ORDER BY turn_number, player_number"#,
+ORDER BY round_number, player_number"#,
         game_id
     )
     .fetch_all(conn)

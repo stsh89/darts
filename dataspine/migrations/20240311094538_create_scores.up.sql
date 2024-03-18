@@ -5,5 +5,5 @@ CREATE TABLE playground.scores (
     player_number int NOT NULL,
     points_kind varchar NOT NULL,
     points_number int NOT NULL,
-    turn_number int NOT NULL
+    round_number int NOT NULL
 )

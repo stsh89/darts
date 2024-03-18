@@ -7,7 +7,7 @@ pub async fn list_scores(conn: &mut PgConnection, game_id: Uuid) -> Result<Vec<S
     let scores = sqlx::query_as!(
         ScoreRow,
         r#"
-SELECT id, game_id, player_name, score, turn_number, insert_time
+SELECT id, game_id, player_name, score, round_number, insert_time
 FROM playground.scores
 WHERE game_id = $1
         "#,

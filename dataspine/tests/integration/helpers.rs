@@ -15,7 +15,7 @@ pub async fn get_score_id(pool: &PgPool) -> anyhow::Result<Uuid> {
         r#"
 SELECT id
 FROM playground.scores
-ORDER BY turn_number DESC, player_number DESC LIMIT 1
+ORDER BY round_number DESC, player_number DESC LIMIT 1
         "#,
     )
     .fetch_one(pool)
