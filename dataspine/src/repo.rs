@@ -7,7 +7,7 @@ use playground::{
     referee, spectator, Error, Game, GameState, LoadGameParameters, LoadGameStateParameters,
     LoadScoreDetailsParameters, PlayerScore, Score, ScoreDetails,
 };
-use sqlx::{pool::PoolConnection, Postgres};
+use sqlx::{pool::PoolConnection, postgres::PgPoolOptions, PgPool, Postgres};
 use uuid::Uuid;
 
 const POINTS_KIND_SCORE: &str = "score";
@@ -127,10 +127,6 @@ impl spectator::ListGames for Repo {
 }
 
 impl Repo {
-    pub fn new(pool: sqlx::Pool<sqlx::postgres::Postgres>) -> Self {
-        Self { pool }
-    }
-
     async fn conn(&self) -> Result<PoolConnection<Postgres>, Error> {
         let conn = self
             .pool
@@ -139,6 +135,19 @@ impl Repo {
             .map_err(|err| Error::Repo(err.into()))?;
 
         Ok(conn)
+    }
+
+    pub async fn from_database_url(database_url: &str) -> Result<Self, Error> {
+        let pool = PgPoolOptions::new()
+            .connect(database_url)
+            .await
+            .map_err(|err| Error::Repo(err.into()))?;
+
+        Ok(Self { pool })
+    }
+
+    pub fn new(pool: PgPool) -> Self {
+        Self { pool }
     }
 }
 
