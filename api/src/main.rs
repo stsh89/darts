@@ -1,3 +1,4 @@
+mod convert;
 mod playground;
 
 use clap::Parser;

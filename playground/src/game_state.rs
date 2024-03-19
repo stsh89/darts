@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use uuid::Uuid;
 
 use crate::{
@@ -9,7 +8,6 @@ use crate::{
 pub struct GameState {
     game: Game,
     score_details: Vec<ScoreDetails>,
-    player_game_scores: HashMap<PlayerNumber, GameScore>,
 }
 
 pub struct PlayerState {
@@ -34,7 +32,7 @@ pub struct LoadGameStateParameters {
 }
 
 impl GameState {
-    pub fn current_player_state(&mut self) -> PlayerState {
+    pub fn current_player_state(&self) -> PlayerState {
         let Some(details) = self.score_details.last() else {
             return PlayerState::new(PlayerNumber::One, self.max_game_score());
         };
@@ -64,7 +62,6 @@ impl GameState {
         Ok(Self {
             game,
             score_details,
-            player_game_scores: HashMap::new(),
         })
     }
 
@@ -98,24 +95,17 @@ impl GameState {
         })
     }
 
-    fn player_game_score(&mut self, player_number: PlayerNumber) -> &GameScore {
-        let score = self
-            .player_game_scores
-            .entry(player_number)
-            .or_insert_with(|| {
-                self.score_details
-                    .iter()
-                    .filter(|details| details.player_number() == player_number)
-                    .map(|details| details.player_score())
-                    .collect::<Vec<PlayerScore>>()
-                    .iter()
-                    .total_game_score()
-            });
-
-        score
+    fn player_game_score(&self, player_number: PlayerNumber) -> GameScore {
+        self.score_details
+            .iter()
+            .filter(|details| details.player_number() == player_number)
+            .map(|details| details.player_score())
+            .collect::<Vec<PlayerScore>>()
+            .iter()
+            .total_game_score()
     }
 
-    pub fn players_game_scores(&mut self) -> Vec<PlayerState> {
+    pub fn players_game_scores(&self) -> Vec<PlayerState> {
         PlayerNumber::all()
             .into_iter()
             .map(|player_number| {
@@ -124,24 +114,18 @@ impl GameState {
             .collect()
     }
 
-    pub fn player_points_to_win(&mut self, player_number: PlayerNumber) -> GameScore {
-        &self.max_game_score() - self.player_game_score(player_number)
+    //TODO: ensure substract operation correctness
+    pub fn player_points_to_win(&self, player_number: PlayerNumber) -> GameScore {
+        let value = self.max_game_score().value() - self.player_game_score(player_number).value();
+
+        GameScore::new(value)
     }
 
     pub fn pop_score_details(&mut self) -> Option<ScoreDetails> {
-        if let Some(score_details) = self.score_details.pop() {
-            self.player_game_scores
-                .remove(&score_details.player_number());
-
-            Some(score_details)
-        } else {
-            None
-        }
+        self.score_details.pop()
     }
 
     pub fn push_score_details(&mut self, score_details: ScoreDetails) {
-        self.player_game_scores
-            .remove(&score_details.player_number());
         self.score_details.push(score_details);
     }
 
@@ -169,8 +153,8 @@ impl GameState {
         rounds
     }
 
-    pub fn winner(&mut self) -> Option<PlayerNumber> {
-        let max_game_score = &self.max_game_score();
+    pub fn winner(&self) -> Option<PlayerNumber> {
+        let max_game_score = self.max_game_score();
 
         for player_number in PlayerNumber::all() {
             let score = self.player_game_score(player_number);

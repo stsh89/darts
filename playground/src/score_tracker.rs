@@ -1,5 +1,3 @@
-use std::ops::Sub;
-
 pub trait AddScore {
     fn add_score(&mut self, score: Score, game_score: &GameScore) -> PlayerScore;
 }
@@ -11,6 +9,7 @@ pub trait TotalGameScore {
 #[derive(Clone, Copy)]
 pub struct Score(u8);
 
+#[derive(PartialEq)]
 pub struct GameScore(u16);
 
 #[derive(Clone, Copy)]
@@ -62,14 +61,6 @@ impl std::fmt::Display for GameScore {
     }
 }
 
-impl<'a, 'b> Sub<&'b GameScore> for &'a GameScore {
-    type Output = GameScore;
-
-    fn sub(self, rhs: &'b GameScore) -> Self::Output {
-        GameScore(self.0 - rhs.0)
-    }
-}
-
 impl AddScore for Vec<PlayerScore> {
     fn add_score(&mut self, score: Score, game_score: &GameScore) -> PlayerScore {
         add_score(self, score, game_score)
@@ -88,18 +79,6 @@ fn add_score(scores: &mut Vec<PlayerScore>, score: Score, game_score: &GameScore
     scores.push(player_score);
 
     player_score
-}
-
-impl PartialEq for GameScore {
-    fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0
-    }
-}
-
-impl PartialOrd for GameScore {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.0.partial_cmp(&other.0)
-    }
 }
 
 impl<'a, T> TotalGameScore for T

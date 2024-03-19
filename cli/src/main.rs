@@ -26,7 +26,11 @@ fn main() {
             player1_scores.add_score(Score::new(x), &max_score);
             let total = player1_scores.iter().total_game_score();
             println!("TOTALITY {}", &total);
-            println!("Player1\ntotal: {}, left: {}", &total, &max_score - &total);
+            println!(
+                "Player1\ntotal: {}, left: {}",
+                &total,
+                max_score.value() - total.value()
+            );
 
             if total == max_score {
                 break;
@@ -36,7 +40,11 @@ fn main() {
         } else {
             player2_scores.add_score(Score::new(x), &max_score);
             let total = player2_scores.iter().total_game_score();
-            println!("Player2\ntotal: {}, left: {}", &total, &max_score - &total);
+            println!(
+                "Player2\ntotal: {}, left: {}",
+                &total,
+                max_score.value() - total.value()
+            );
 
             if total == max_score {
                 break;
