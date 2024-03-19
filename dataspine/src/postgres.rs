@@ -56,7 +56,7 @@ async fn find_game(conn: &mut PgConnection, id: Uuid) -> MaybeRowResult<GameRow>
         r#"SELECT id, insert_time FROM playground.games WHERE id = $1"#,
         id,
     )
-    .fetch_optional(conn.as_mut())
+    .fetch_optional(conn)
     .await?;
 
     Ok(row)
