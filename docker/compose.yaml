@@ -1,0 +1,40 @@
+services:
+  web:
+    image: darts/web
+    container_name: darts_web
+    build:
+      context: ../web
+      dockerfile: ../docker/web.Dockerfile
+    ports:
+      - 80:3000
+    environment:
+      GRPC_API_HOST: grpc
+      RACK_ENV: production
+    command: ["bundler", "exec", "puma", "-I", "lib", "-p", "3000"]
+
+  grpc:
+    image: darts/grpc
+    container_name: darts_grpc
+    build:
+      context: ../
+      dockerfile: ./docker/grpc.Dockerfile
+    environment:
+      DARTS_DATABASE_URL: postgres://postgres:postgres@database:5432/darts
+    depends_on:
+      database:
+        condition: service_healthy
+    command: ["./target/release/api", "--database-url", "postgres://postgres:postgres@database:5432/darts"]
+
+  database:
+    image: postgres:16.2
+    container_name: darts_database
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 15432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
