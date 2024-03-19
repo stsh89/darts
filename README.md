@@ -1,3 +1,9 @@
+# Darts
+
+## Description
+
+Personal darts scorer tool.
+
 # Database setup
 
 ## Start database under Docker
