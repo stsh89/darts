@@ -4,8 +4,8 @@ require 'google/protobuf/well_known_types'
 
 # Games API
 class GamesApi
-  def initialize
-    @stub = Proto::Playground::Games::Stub.new('[::1]:50051', :this_channel_is_insecure)
+  def initialize()
+    @stub = Proto::Playground::Games::Stub.new("#{GRPC_API_HOST}:50051", :this_channel_is_insecure)
   end
 
   def cancel_last_score(game_id:)

@@ -1,3 +1,11 @@
+# Database setup
+
+## Start database under Docker
+
+```
+docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres --name postgres postgres:16.2
+```
+
 ## Create database
 
 ```

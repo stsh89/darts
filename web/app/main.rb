@@ -3,6 +3,8 @@
 require 'sinatra'
 require_relative './games_service'
 
+GRPC_API_HOST = ENV['GRPC_API_HOST'] || '[::1]'
+
 get '/' do
   result = GamesService.list_games
   games = handle_result(result)
