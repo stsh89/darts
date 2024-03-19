@@ -138,7 +138,12 @@ fn rpc_game_details(mut game_state: GameState) -> rpc::GameDetails {
             .unwrap_or_default(),
         player: current_player_state.player_number().name().to_string(),
         player_points_to_win: current_player_state.points_to_win().value().into(),
-        rounds: game_state.rounds().into_iter().map(rpc_round).collect(),
+        rounds: game_state
+            .rounds()
+            .into_iter()
+            .rev()
+            .map(rpc_round)
+            .collect(),
         player_details: game_state
             .players_game_scores()
             .into_iter()
@@ -189,14 +194,3 @@ fn timestamp(datetime: DateTime<Utc>) -> prost_types::Timestamp {
 fn uuid(string: &str) -> Result<Uuid, Status> {
     Uuid::parse_str(string).map_err(|_err| Status::invalid_argument(format!("UUID: {}", string)))
 }
-
-// fn game_details(game: gateway::Game) -> rpc::GameDetails {
-//     rpc::GameDetails {
-//         game_id: game.id.to_string(),
-//         winner: value.winner.unwrap_or_default(),
-//         player: value.player.name(),
-//         player_points_to_win: value.player_points_to_win.into(),
-//         rounds: value.rounds.into_iter().rev().map(Into::into).collect(),
-//         player_details: value.player_details.into_iter().map(Into::into).collect(),
-//     }
-// }
