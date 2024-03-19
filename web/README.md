@@ -15,9 +15,3 @@ grpc_tools_ruby_protoc \
     --grpc_out=lib \
     ../protobuf/proto/games.proto
 ```
-
-## Start mock server
-
-```
-ruby -I ./lib ./grpc_server_mock/main.rb
-```
