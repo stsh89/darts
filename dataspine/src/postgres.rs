@@ -2,8 +2,8 @@ use sqlx::PgConnection;
 use uuid::Uuid;
 
 use crate::{
-    games::ListGames, scores::ListScores, DeleteScore, EmptyResult, FindGame, GameRow, InserScore,
-    InsertGame, InsertScoreParameters, MaybeRowResult, RowResult, RowsResult, ScoreRow,
+    games::ListGames, scores::ListScores, DeleteScore, EmptyResult, FindGame, GameRow, InsertGame,
+    InsertScore, InsertScoreParameters, MaybeRowResult, RowResult, RowsResult, ScoreRow,
 };
 
 impl DeleteScore for PgConnection {
@@ -24,7 +24,7 @@ impl InsertGame for PgConnection {
     }
 }
 
-impl InserScore for PgConnection {
+impl InsertScore for PgConnection {
     async fn insert_score(&mut self, parameters: InsertScoreParameters) -> RowResult<ScoreRow> {
         insert_score(self, parameters).await
     }

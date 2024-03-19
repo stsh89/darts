@@ -1,6 +1,6 @@
 use crate::{
     games::{FindGame, InsertGame, ListGames},
-    scores::{DeleteScore, InserScore, ListScores},
+    scores::{DeleteScore, InsertScore, ListScores},
     GameRow, InsertScoreParameters, ScoreRow,
 };
 use playground::{

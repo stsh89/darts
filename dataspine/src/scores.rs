@@ -6,7 +6,7 @@ pub trait DeleteScore {
     async fn delete_score(&mut self, id: Uuid) -> EmptyResult;
 }
 
-pub trait InserScore {
+pub trait InsertScore {
     async fn insert_score(&mut self, parameters: InsertScoreParameters) -> RowResult<ScoreRow>;
 }
 
