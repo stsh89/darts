@@ -1,3 +1,17 @@
+# Documentation
+
+## Run mdbook
+
+```sh
+mdbook serve ./documentation/ --open
+```
+
+## Build documentation
+
+```sh
+cargo doc --no-deps --open
+```
+
 # Database setup
 
 ## Start database under Docker
