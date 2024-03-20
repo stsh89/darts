@@ -114,7 +114,7 @@ impl GameState {
     }
 
     //TODO: ensure substract operation correctness
-    pub fn player_points_to_win(&self, player_number: PlayerNumber) -> GameScore {
+    fn player_points_to_win(&self, player_number: PlayerNumber) -> GameScore {
         let value = self.max_game_score().value() - self.player_game_score(player_number).value();
 
         GameScore::new(value)
