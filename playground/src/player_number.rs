@@ -26,15 +26,6 @@ impl PlayerNumber {
     }
 }
 
-impl From<PlayerNumber> for i32 {
-    fn from(value: PlayerNumber) -> Self {
-        match value {
-            PlayerNumber::One => 1,
-            PlayerNumber::Two => 2,
-        }
-    }
-}
-
 impl TryFrom<i32> for PlayerNumber {
     type Error = Error;
 
@@ -50,5 +41,14 @@ impl TryFrom<i32> for PlayerNumber {
         Err(Error::Unexpected(eyre::eyre!(
             "Invalid player number: {value}"
         )))
+    }
+}
+
+impl From<PlayerNumber> for i32 {
+    fn from(value: PlayerNumber) -> Self {
+        match value {
+            PlayerNumber::One => 1,
+            PlayerNumber::Two => 2,
+        }
     }
 }
