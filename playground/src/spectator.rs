@@ -1,9 +1,9 @@
-use crate::{Error, Game, GameState, GetGameState};
+use crate::{Error, GamePreview, GameState, GetGameState, Schedule};
 use uuid::Uuid;
 
-pub trait ListGames {
+pub trait ListGamePreviews {
     #[allow(async_fn_in_trait)]
-    async fn list_games(&self) -> Result<Vec<Game>, Error>;
+    async fn list_game_previews(&self) -> Result<Vec<GamePreview>, Error>;
 }
 
 pub struct GetGameParameters<'a, G>
@@ -16,7 +16,7 @@ where
 
 pub struct ListGamesParameters<'a, G>
 where
-    G: ListGames,
+    G: ListGamePreviews,
 {
     pub games: &'a G,
 }
@@ -30,11 +30,11 @@ where
     games.get_game_state(game_id).await
 }
 
-pub async fn list_games<G>(parameters: ListGamesParameters<'_, G>) -> Result<Vec<Game>, Error>
+pub async fn get_schedule<G>(parameters: ListGamesParameters<'_, G>) -> Result<Schedule, Error>
 where
-    G: ListGames,
+    G: ListGamePreviews,
 {
-    let games = parameters.games.list_games().await?;
+    let game_previews = parameters.games.list_game_previews().await?;
 
-    Ok(games)
+    Ok(Schedule::new(game_previews))
 }

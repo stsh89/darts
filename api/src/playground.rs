@@ -68,7 +68,10 @@ impl rpc::games_server::Games for Server {
             .await
             .map_err(ToRpc::to_rpc)?;
 
-        Ok(Response::new(game.to_rpc()))
+        Ok(Response::new(rpc::Game {
+            id: game.game_id().to_string(),
+            start_time: None,
+        }))
     }
 
     async fn get_game_details(
@@ -91,11 +94,16 @@ impl rpc::games_server::Games for Server {
         &self,
         _request: Request<rpc::ListGamesRequest>,
     ) -> Result<Response<rpc::ListGamesResponse>, Status> {
-        let games = spectator::list_games(spectator::ListGamesParameters { games: &self.repo })
-            .await
-            .map_err(ToRpc::to_rpc)?;
+        let schedule =
+            spectator::get_schedule(spectator::ListGamesParameters { games: &self.repo })
+                .await
+                .map_err(ToRpc::to_rpc)?;
 
-        let games = games.into_iter().map(ToRpc::to_rpc).collect();
+        let games = schedule
+            .into_game_previews()
+            .into_iter()
+            .map(ToRpc::to_rpc)
+            .collect();
 
         Ok(Response::new(rpc::ListGamesResponse { games }))
     }

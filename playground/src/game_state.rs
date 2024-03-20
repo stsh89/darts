@@ -1,12 +1,11 @@
 use uuid::Uuid;
 
 use crate::{
-    AddScore, Error, Game, GameScore, PlayerNumber, PlayerScore, Score, ScoreDetails,
-    TotalGameScore,
+    AddScore, Error, GameScore, PlayerNumber, PlayerScore, Score, ScoreDetails, TotalGameScore,
 };
 
 pub struct GameState {
-    game: Game,
+    game_id: Uuid,
     score_details: Vec<ScoreDetails>,
 }
 
@@ -27,7 +26,7 @@ pub struct Turn {
 }
 
 pub struct LoadGameStateParameters {
-    pub game: Game,
+    pub game_id: Uuid,
     pub score_details: Vec<ScoreDetails>,
 }
 
@@ -50,17 +49,17 @@ impl GameState {
     }
 
     pub fn game_id(&self) -> Uuid {
-        self.game.id()
+        self.game_id
     }
 
     pub fn load(parameters: LoadGameStateParameters) -> Result<Self, Error> {
         let LoadGameStateParameters {
-            game,
+            game_id,
             score_details,
         } = parameters;
 
         Ok(Self {
-            game,
+            game_id,
             score_details,
         })
     }

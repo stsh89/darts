@@ -1,6 +1,6 @@
 use crate::playground::rpc;
 use chrono::{DateTime, Utc};
-use playground::{Error, Game, GameState, PlayerScore, PlayerState, Round};
+use playground::{Error, GamePreview, GameState, PlayerScore, PlayerState, Round};
 use prost_types::Timestamp;
 use std::time::SystemTime;
 use tonic::Status;
@@ -14,10 +14,10 @@ pub trait TryConvert<T> {
     fn try_convert(self) -> Result<T, Status>;
 }
 
-impl ToRpc<rpc::Game> for Game {
+impl ToRpc<rpc::Game> for GamePreview {
     fn to_rpc(self) -> rpc::Game {
         rpc::Game {
-            id: self.id().to_string(),
+            id: self.game_id().to_string(),
             start_time: Some(self.start_time().to_rpc()),
         }
     }

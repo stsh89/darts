@@ -4,7 +4,7 @@ use crate::{
     GameRow, InsertScoreParameters, ScoreRow,
 };
 use playground::{
-    referee, spectator, Error, Game, GameState, LoadGameParameters, LoadGameStateParameters,
+    referee, spectator, Error, GamePreview, GameState, LoadGameStateParameters,
     LoadScoreDetailsParameters, PlayerScore, Score, ScoreDetails,
 };
 use sqlx::{pool::PoolConnection, postgres::PgPoolOptions, PgPool, Postgres};
@@ -24,14 +24,13 @@ pub struct Repo {
 
 impl playground::GetGameState for Repo {
     async fn get_game_state(&self, game_id: Uuid) -> Result<GameState, Error> {
-        let game = self
+        let game: GameRow = self
             .conn()
             .await?
             .find_game(game_id)
             .await
             .map_err(|err| Error::Repo(err.into()))?
-            .ok_or(Error::NotFound("Game not found".to_string()))?
-            .into();
+            .ok_or(Error::NotFound("Game not found".to_string()))?;
 
         let score_details = self
             .conn()
@@ -44,7 +43,7 @@ impl playground::GetGameState for Repo {
             .collect::<Result<Vec<ScoreDetails>, Error>>()?;
 
         let game_state = GameState::load(LoadGameStateParameters {
-            game,
+            game_id: game.id,
             score_details,
         })?;
 
@@ -64,8 +63,8 @@ impl referee::DeleteScore for Repo {
     }
 }
 
-impl referee::InsertGame for Repo {
-    async fn insert_game(&self) -> Result<Game, Error> {
+impl referee::InsertGamePreview for Repo {
+    async fn insert_game_preview(&self) -> Result<GamePreview, Error> {
         let game = self
             .conn()
             .await?
@@ -110,8 +109,8 @@ impl referee::InsertScore for Repo {
     }
 }
 
-impl spectator::ListGames for Repo {
-    async fn list_games(&self) -> Result<Vec<Game>, Error> {
+impl spectator::ListGamePreviews for Repo {
+    async fn list_game_previews(&self) -> Result<Vec<GamePreview>, Error> {
         let games = self
             .conn()
             .await?
@@ -151,14 +150,11 @@ impl Repo {
     }
 }
 
-impl From<GameRow> for Game {
+impl From<GameRow> for GamePreview {
     fn from(value: GameRow) -> Self {
         let GameRow { id, insert_time } = value;
 
-        Self::load(LoadGameParameters {
-            id,
-            start_time: insert_time,
-        })
+        Self::new(id, insert_time)
     }
 }
 

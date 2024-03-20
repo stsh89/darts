@@ -1,5 +1,8 @@
 use crate::score_tracker::Score;
-use crate::{Error, Game, GameState, GetGameState, PlayerNumber, PlayerScore, ScoreDetails, Turn};
+use crate::{
+    Error, GamePreview, GameState, GetGameState, LoadGameStateParameters, PlayerNumber,
+    PlayerScore, ScoreDetails, Turn,
+};
 use uuid::Uuid;
 
 pub trait DeleteScore {
@@ -7,9 +10,9 @@ pub trait DeleteScore {
     async fn delete_score(&self, id: Uuid) -> Result<(), Error>;
 }
 
-pub trait InsertGame {
+pub trait InsertGamePreview {
     #[allow(async_fn_in_trait)]
-    async fn insert_game(&self) -> Result<Game, Error>;
+    async fn insert_game_preview(&self) -> Result<GamePreview, Error>;
 }
 
 pub trait InsertScore {
@@ -47,7 +50,7 @@ pub struct InsertScoreParameters {
 
 pub struct StartGameParameters<'a, G>
 where
-    G: InsertGame,
+    G: InsertGamePreview,
 {
     pub games: &'a G,
 }
@@ -111,13 +114,16 @@ where
     Ok(game_state)
 }
 
-pub async fn start_game<G>(parameters: StartGameParameters<'_, G>) -> Result<Game, Error>
+pub async fn start_game<G>(parameters: StartGameParameters<'_, G>) -> Result<GameState, Error>
 where
-    G: InsertGame,
+    G: InsertGamePreview,
 {
     let StartGameParameters { games } = parameters;
 
-    let game = games.insert_game().await?;
+    let game_preview = games.insert_game_preview().await?;
 
-    Ok(game)
+    GameState::load(LoadGameStateParameters {
+        game_id: game_preview.game_id(),
+        score_details: vec![],
+    })
 }
