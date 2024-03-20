@@ -63,22 +63,18 @@ impl std::fmt::Display for GameScore {
 
 impl AddScore for Vec<PlayerScore> {
     fn add_score(&mut self, score: Score, game_score: &GameScore) -> PlayerScore {
-        add_score(self, score, game_score)
+        let player_game_score: GameScore = self.iter().total_game_score();
+
+        let player_score = if (player_game_score.0 + Into::<u16>::into(score.0)) > game_score.0 {
+            PlayerScore::Overthrow(score)
+        } else {
+            PlayerScore::Score(score)
+        };
+
+        self.push(player_score);
+
+        player_score
     }
-}
-
-fn add_score(scores: &mut Vec<PlayerScore>, score: Score, game_score: &GameScore) -> PlayerScore {
-    let player_game_score: GameScore = scores.iter().total_game_score();
-
-    let player_score = if (player_game_score.0 + Into::<u16>::into(score.0)) > game_score.0 {
-        PlayerScore::Overthrow(score)
-    } else {
-        PlayerScore::Score(score)
-    };
-
-    scores.push(player_score);
-
-    player_score
 }
 
 impl<'a, T> TotalGameScore for T
@@ -86,15 +82,11 @@ where
     T: Iterator<Item = &'a PlayerScore>,
 {
     fn total_game_score(self) -> GameScore {
-        total_game_score(self)
+        let acc = self.fold(0u16, |acc, x| match x {
+            PlayerScore::Score(score) => Into::<u16>::into(score.0) + acc,
+            PlayerScore::Overthrow(_score) => acc,
+        });
+
+        GameScore(acc)
     }
-}
-
-fn total_game_score<'a, I: Iterator<Item = &'a PlayerScore>>(iter: I) -> GameScore {
-    let acc = iter.fold(0u16, |acc, x| match x {
-        PlayerScore::Score(score) => Into::<u16>::into(score.0) + acc,
-        PlayerScore::Overthrow(_score) => acc,
-    });
-
-    GameScore(acc)
 }
