@@ -1,4 +1,4 @@
-use playground::score_tracker::{AddScore, GameScore, Score, TotalGameScore};
+use playground::{AddScore, GameScore, Score, TotalGameScore};
 use std::io;
 
 fn main() {

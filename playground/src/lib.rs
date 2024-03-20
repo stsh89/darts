@@ -3,9 +3,9 @@ mod game_state;
 mod player_number;
 mod schedule;
 mod score_details;
+mod score_tracker;
 
 pub mod referee;
-pub mod score_tracker;
 pub mod spectator;
 
 pub use error::Error;
