@@ -11,15 +11,15 @@ pub struct Schedule {
 }
 
 impl GamePreview {
+    pub fn game_id(&self) -> Uuid {
+        self.game_id
+    }
+
     pub fn new(game_id: Uuid, start_time: DateTime<Utc>) -> Self {
         Self {
             game_id,
             start_time,
         }
-    }
-
-    pub fn game_id(&self) -> Uuid {
-        self.game_id
     }
 
     pub fn start_time(&self) -> DateTime<Utc> {
