@@ -69,7 +69,7 @@ impl ScoreTracker {
     fn track_first_score(&mut self, score: Score) {
         let mut player = Player::new(NewPlayerParameters {
             number: self.player_to_score,
-            game_limit: self.points_limit,
+            points_limit: self.points_limit,
         });
 
         player.add_score(score);

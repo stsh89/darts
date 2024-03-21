@@ -5,7 +5,7 @@ fn main() {
     let mut input_line = String::with_capacity(20);
 
     let mut score_tracker = ScoreTracker::new(NewScoreTrackerParameters {
-        players_number: 7,
+        players_number: 2,
         points_limit: 301,
     });
 

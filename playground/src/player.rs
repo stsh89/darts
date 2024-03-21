@@ -1,38 +1,34 @@
 use crate::{PlayerScore, Points, Score};
 
 pub struct Player {
-    game_points: Points,
-    limit: Points,
     number: usize,
+    points_limit: Points,
+    points: Points,
     scores: Vec<PlayerScore>,
 }
 
 pub struct NewPlayerParameters {
-    pub game_limit: Points,
     pub number: usize,
+    pub points_limit: Points,
 }
 
 impl Player {
-    pub fn add_game_points(&mut self, points: Points) {
-        self.game_points = self.game_points + points;
-    }
-
     pub fn add_score(&mut self, score: Score) {
         let player_score = self.get_player_score(score);
 
         if player_score.is_score() {
-            self.game_points = self.game_points + score.points();
+            self.points = self.points + score.points();
         }
 
         self.scores.push(player_score);
     }
 
-    pub fn game_points(&self) -> Points {
-        self.game_points
+    pub fn points(&self) -> Points {
+        self.points
     }
 
     pub fn is_winner(&self) -> bool {
-        self.game_points() == self.limit
+        self.points == self.points_limit
     }
 
     fn get_player_score(&mut self, score: Score) -> PlayerScore {
@@ -44,19 +40,19 @@ impl Player {
     }
 
     fn score_overthrow(&self, score: Score) -> bool {
-        (self.game_points() + score.points()) > self.limit
+        (self.points + score.points()) > self.points_limit
     }
 
     pub fn new(parameters: NewPlayerParameters) -> Self {
         let NewPlayerParameters {
-            game_limit: limit,
+            points_limit,
             number,
         } = parameters;
 
         Self {
-            game_points: Points::from(0),
-            limit,
             number,
+            points_limit,
+            points: Points::from(0),
             scores: Vec::with_capacity(20),
         }
     }
@@ -66,9 +62,9 @@ impl Player {
     }
 
     pub fn points_to_win(&self) -> Points {
-        let limit: u16 = self.limit.into();
-        let game_points: u16 = self.game_points.into();
+        let points_limit: u16 = self.points_limit.into();
+        let points: u16 = self.points.into();
 
-        Points::from(limit - game_points)
+        Points::from(points_limit - points)
     }
 }
