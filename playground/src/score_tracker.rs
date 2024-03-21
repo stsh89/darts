@@ -1,5 +1,88 @@
-use crate::Score;
+use crate::{NewPlayerParameters, Player, Points, Score};
 use std::ops::Add;
+
+pub struct ScoreTracker {
+    player_to_score: usize,
+    players_number: usize,
+    players: Vec<Player>,
+    points_limit: Points,
+    winner: Option<usize>,
+}
+
+pub struct NewScoreTrackerParameters {
+    pub players_number: usize,
+    pub points_limit: u16,
+}
+
+impl ScoreTracker {
+    pub fn new(parameters: NewScoreTrackerParameters) -> Self {
+        let NewScoreTrackerParameters {
+            players_number,
+            points_limit,
+        } = parameters;
+
+        ScoreTracker {
+            player_to_score: 0,
+            players_number,
+            players: vec![],
+            points_limit: Points::from(points_limit),
+            winner: None,
+        }
+    }
+
+    fn pass_turn(&mut self) {
+        self.player_to_score = (self.player_to_score + 1) % self.players_number;
+    }
+
+    pub fn player_to_score(&self) -> usize {
+        self.player_to_score
+    }
+
+    pub fn player_to_score_points_to_win(&self) -> Points {
+        if let Some(player) = self.players.get(self.player_to_score) {
+            player.points_to_win()
+        } else {
+            self.points_limit
+        }
+    }
+
+    pub fn track(&mut self, score: Score) {
+        if self.winner().is_some() {
+            return;
+        }
+
+        let Some(player) = self.players.get_mut(self.player_to_score) else {
+            self.track_first_score(score);
+
+            return;
+        };
+
+        player.add_score(score);
+
+        if player.is_winner() {
+            self.winner = Some(player.number());
+        }
+
+        self.pass_turn();
+    }
+
+    fn track_first_score(&mut self, score: Score) {
+        let mut player = Player::new(NewPlayerParameters {
+            number: self.player_to_score,
+            game_limit: self.points_limit,
+        });
+
+        player.add_score(score);
+
+        self.players.push(player);
+
+        self.pass_turn();
+    }
+
+    pub fn winner(&self) -> Option<usize> {
+        self.winner
+    }
+}
 
 pub trait AddScore {
     fn add_score(&mut self, score: Score, game_score: &GameScore) -> PlayerScore;
@@ -32,6 +115,18 @@ impl PlayerScore {
             PlayerScore::Score(score) => score.points().into(),
             PlayerScore::Overthrow(score) => score.points().into(),
         }
+    }
+
+    pub fn points(&self) -> Points {
+        match self {
+            PlayerScore::Score(score) => score,
+            PlayerScore::Overthrow(score) => score,
+        }
+        .points()
+    }
+
+    pub fn is_score(&self) -> bool {
+        matches!(self, PlayerScore::Score(_))
     }
 }
 

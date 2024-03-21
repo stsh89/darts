@@ -1,14 +1,23 @@
-use playground::{AddScore, GameScore, Score, TotalGameScore};
+use playground::{NewScoreTrackerParameters, Score, ScoreTracker};
 use std::io;
 
 fn main() {
     let mut input_line = String::with_capacity(20);
-    let mut player1_scores = Vec::with_capacity(20);
-    let mut player2_scores = Vec::with_capacity(20);
-    let mut player_number = 1;
-    let max_score = GameScore::new(301);
+
+    let mut score_tracker = ScoreTracker::new(NewScoreTrackerParameters {
+        players_number: 7,
+        points_limit: 301,
+    });
 
     loop {
+        println!(
+            "Player{} {}",
+            score_tracker.player_to_score() + 1,
+            score_tracker.player_to_score_points_to_win()
+        );
+
+        println!("Enter score: ");
+
         io::stdin()
             .read_line(&mut input_line)
             .expect("Failed to read line");
@@ -17,46 +26,18 @@ fn main() {
             break;
         }
 
-        println!("{}", &input_line);
-
         let x: u16 = input_line.trim().parse().expect("Input not an integer");
         input_line = String::new();
+        let score = Score::try_from(x).expect("Max 180 points allowed");
 
-        if player_number == 1 {
-            player1_scores.add_score(
-                Score::try_from(x).expect("Max 180 points allowed"),
-                &max_score,
-            );
-            let total = player1_scores.iter().total_game_score();
-            println!("TOTALITY {}", &total);
-            println!(
-                "Player1\ntotal: {}, left: {}",
-                &total,
-                max_score.value() - total.value()
-            );
+        score_tracker.track(score);
 
-            if total == max_score {
-                break;
-            } else {
-                player_number = 2;
-            }
-        } else {
-            player2_scores.add_score(
-                Score::try_from(x).expect("Max 180 points allowed"),
-                &max_score,
-            );
-            let total = player2_scores.iter().total_game_score();
-            println!(
-                "Player2\ntotal: {}, left: {}",
-                &total,
-                max_score.value() - total.value()
-            );
+        println!();
 
-            if total == max_score {
-                break;
-            } else {
-                player_number = 1;
-            }
-        };
+        if let Some(winner) = score_tracker.winner() {
+            println!("Player{} won", winner + 1);
+
+            break;
+        }
     }
 }
