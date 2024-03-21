@@ -210,14 +210,13 @@ impl TryFrom<Points> for PlayerScore {
 
     fn try_from(value: Points) -> Result<Self, Error> {
         let Points { kind, number } = value;
-        let points_number = number.try_into().map_err(Into::<eyre::Report>::into)?;
 
         if kind == POINTS_KIND_SCORE {
-            return Ok(PlayerScore::Score(Score::new(points_number)));
+            return Ok(PlayerScore::Score(Score::try_from(number)?));
         }
 
         if kind == POINTS_KIND_OVERTHROW {
-            return Ok(PlayerScore::Overthrow(Score::new(points_number)));
+            return Ok(PlayerScore::Overthrow(Score::try_from(number)?));
         }
 
         Err(Error::Unexpected(eyre::eyre!("Invalid points kind")))

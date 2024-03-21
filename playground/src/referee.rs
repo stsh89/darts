@@ -1,7 +1,6 @@
-use crate::score_tracker::Score;
 use crate::{
     Error, GamePreview, GameState, GetGameState, LoadGameStateParameters, PlayerNumber,
-    PlayerScore, ScoreDetails, Turn,
+    PlayerScore, Score, ScoreDetails, Turn,
 };
 use uuid::Uuid;
 

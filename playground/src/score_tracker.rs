@@ -1,3 +1,6 @@
+use crate::Score;
+use std::ops::Add;
+
 pub trait AddScore {
     fn add_score(&mut self, score: Score, game_score: &GameScore) -> PlayerScore;
 }
@@ -5,9 +8,6 @@ pub trait AddScore {
 pub trait TotalGameScore {
     fn total_game_score(self) -> GameScore;
 }
-
-#[derive(Clone, Copy)]
-pub struct Score(u8);
 
 #[derive(PartialEq)]
 pub struct GameScore(u16);
@@ -18,29 +18,19 @@ pub enum PlayerScore {
     Overthrow(Score),
 }
 
-impl Score {
-    pub fn new(x: u8) -> Score {
-        Score(x)
-    }
-
-    pub fn points(&self) -> u8 {
-        self.0
-    }
-}
-
 impl PlayerScore {
-    pub fn score(points: u8) -> Self {
-        PlayerScore::Score(Score::new(points))
+    pub fn score(points: u16) -> Self {
+        PlayerScore::Score(Score::try_from(points).unwrap())
     }
 
-    pub fn overthrow(points: u8) -> Self {
-        PlayerScore::Overthrow(Score::new(points))
+    pub fn overthrow(points: u16) -> Self {
+        PlayerScore::Overthrow(Score::try_from(points).unwrap())
     }
 
-    pub fn into_inner(&self) -> u8 {
+    pub fn into_inner(&self) -> u16 {
         match self {
-            PlayerScore::Score(score) => score.points(),
-            PlayerScore::Overthrow(score) => score.points(),
+            PlayerScore::Score(score) => score.points().into(),
+            PlayerScore::Overthrow(score) => score.points().into(),
         }
     }
 }
@@ -65,11 +55,12 @@ impl AddScore for Vec<PlayerScore> {
     fn add_score(&mut self, score: Score, game_score: &GameScore) -> PlayerScore {
         let player_game_score: GameScore = self.iter().total_game_score();
 
-        let player_score = if (player_game_score.0 + Into::<u16>::into(score.0)) > game_score.0 {
-            PlayerScore::Overthrow(score)
-        } else {
-            PlayerScore::Score(score)
-        };
+        let player_score =
+            if (player_game_score + GameScore(score.points().into())).0 > game_score.0 {
+                PlayerScore::Overthrow(score)
+            } else {
+                PlayerScore::Score(score)
+            };
 
         self.push(player_score);
 
@@ -82,11 +73,17 @@ where
     T: Iterator<Item = &'a PlayerScore>,
 {
     fn total_game_score(self) -> GameScore {
-        let acc = self.fold(0u16, |acc, x| match x {
-            PlayerScore::Score(score) => Into::<u16>::into(score.0) + acc,
+        self.fold(GameScore(0), |acc, x| match x {
+            PlayerScore::Score(score) => GameScore(score.points().into()) + acc,
             PlayerScore::Overthrow(_score) => acc,
-        });
+        })
+    }
+}
 
-        GameScore(acc)
+impl Add for GameScore {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        GameScore(self.0 + rhs.0)
     }
 }

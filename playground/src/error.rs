@@ -1,5 +1,8 @@
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
+    #[error("Invalid argument: {0}")]
+    InvalidArgument(String),
+
     #[error("Failed precondition: {0}")]
     FailedPrecondition(String),
 

@@ -19,11 +19,14 @@ fn main() {
 
         println!("{}", &input_line);
 
-        let x: u8 = input_line.trim().parse().expect("Input not an integer");
+        let x: u16 = input_line.trim().parse().expect("Input not an integer");
         input_line = String::new();
 
         if player_number == 1 {
-            player1_scores.add_score(Score::new(x), &max_score);
+            player1_scores.add_score(
+                Score::try_from(x).expect("Max 180 points allowed"),
+                &max_score,
+            );
             let total = player1_scores.iter().total_game_score();
             println!("TOTALITY {}", &total);
             println!(
@@ -38,7 +41,10 @@ fn main() {
                 player_number = 2;
             }
         } else {
-            player2_scores.add_score(Score::new(x), &max_score);
+            player2_scores.add_score(
+                Score::try_from(x).expect("Max 180 points allowed"),
+                &max_score,
+            );
             let total = player2_scores.iter().total_game_score();
             println!(
                 "Player2\ntotal: {}, left: {}",

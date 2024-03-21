@@ -42,9 +42,7 @@ impl rpc::games_server::Games for Server {
     ) -> Result<Response<rpc::CountPointsResponse>, Status> {
         let rpc::CountPointsRequest { game_id, points } = request.into_inner();
 
-        let points = TryInto::<u8>::try_into(points)
-            .map_err(|_| Status::invalid_argument("Too many points"))?;
-        let score = Score::new(points);
+        let score = Score::try_from(points).map_err(ToRpc::to_rpc)?;
 
         let game_state = referee::count_score(referee::CountScoreParameters {
             games: &self.repo,
