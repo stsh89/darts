@@ -1,43 +1,46 @@
 use playground::{NewScoreTrackerParameters, Score, ScoreTracker};
 use std::io;
 
-fn main() {
-    let mut input_line = String::with_capacity(20);
-
+fn main() -> anyhow::Result<()> {
     let mut score_tracker = ScoreTracker::new(NewScoreTrackerParameters {
         players_number: 2,
         points_limit: 301,
     });
 
     loop {
+        let mut input_line = String::new();
+
         println!(
-            "Player{} {}",
+            "\nPlayer{} {}",
             score_tracker.player_to_score() + 1,
             score_tracker.player_to_score_points_to_win()
         );
 
         println!("Enter score: ");
 
-        io::stdin()
-            .read_line(&mut input_line)
-            .expect("Failed to read line");
+        let Ok(_) = io::stdin().read_line(&mut input_line) else {
+            continue;
+        };
 
-        if input_line == "exit\n" {
-            break;
-        }
+        let Ok(x): Result<u16, _> = input_line.trim().parse() else {
+            println!("Ensure to enter a score between 0 and 180");
+            continue;
+        };
 
-        let x: u16 = input_line.trim().parse().expect("Input not an integer");
-        input_line = String::new();
-        let score = Score::try_from(x).expect("Max 180 points allowed");
+        let score = match Score::try_from(x) {
+            Ok(score) => score,
+            Err(err) => {
+                println!("{err}");
+                continue;
+            }
+        };
 
         score_tracker.track(score);
 
-        println!();
-
         if let Some(winner) = score_tracker.winner() {
-            println!("Player{} won", winner + 1);
+            println!("\nPlayer{} won", winner + 1);
 
-            break;
+            return Ok(());
         }
     }
 }
