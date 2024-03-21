@@ -2,8 +2,12 @@
 
 ```mermaid
 classDiagram
+    class Points {
+
+    }
+
     class Score {
-        +value() number
+        +points() Points
     }
 
     class PlayerScore {
@@ -51,6 +55,7 @@ classDiagram
        +points_to_win() GameScore
     }
 
+    Score *-- Points
     PlayerScore *-- Score
     PlayerStats <-- GameScore
     Game <.. PlayerStats
