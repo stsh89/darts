@@ -43,8 +43,6 @@ post '/games' do
   game = handle_result(result)
 
   redirect "/games/#{game.id}"
-rescue StandardError => _e
-  erb :internal_server_error
 end
 
 def handle_result(result, default_value = [])
