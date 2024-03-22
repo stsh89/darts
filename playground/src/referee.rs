@@ -1,6 +1,6 @@
 use crate::{
-    Error, GamePreview, GameState, GetGameState, LoadGameStateParameters, PlayerNumber,
-    PlayerScore, Score, ScoreDetails,
+    Error, GamePreview, GameState, GetGameState, LoadGameStateParameters, PlayerScore, Score,
+    ScoreDetails,
 };
 use uuid::Uuid;
 
@@ -42,7 +42,7 @@ where
 
 pub struct InsertScoreParameters {
     pub game_id: Uuid,
-    pub player_number: PlayerNumber,
+    pub player_number: usize,
     pub player_score: PlayerScore,
     pub round_number: u8,
 }
@@ -100,7 +100,7 @@ where
     let score_details = scores
         .insert_score(InsertScoreParameters {
             game_id,
-            player_number: player.number().into(),
+            player_number: player.number(),
             player_score: *player
                 .last_score()
                 .ok_or(Error::FailedPrecondition("No last score".to_string()))?,

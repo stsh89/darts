@@ -96,7 +96,9 @@ impl referee::InsertScore for Repo {
             .await?
             .insert_score(InsertScoreParameters {
                 game_id,
-                player_number: player_number.into(),
+                player_number: (player_number + 1)
+                    .try_into()
+                    .map_err(Into::<eyre::Report>::into)?,
                 points_kind: points.kind,
                 points_number: points.number,
                 round_number: round_number.into(),
@@ -181,7 +183,9 @@ impl TryFrom<ScoreRow> for ScoreDetails {
         Ok(Self::load(LoadScoreDetailsParameters {
             id,
             game_id,
-            player_number: player_number.try_into()?,
+            player_number: (player_number - 1)
+                .try_into()
+                .map_err(Into::<eyre::Report>::into)?,
             player_score: score,
             round_number: round_number
                 .try_into()

@@ -1,7 +1,6 @@
 mod error;
 mod game_state;
 mod player;
-mod player_number;
 mod player_score;
 mod points;
 mod schedule;
@@ -15,7 +14,6 @@ pub mod spectator;
 pub use error::Error;
 pub use game_state::{GameState, LoadGameStateParameters, Round};
 pub use player::{NewPlayerParameters, Player};
-pub use player_number::PlayerNumber;
 pub use player_score::PlayerScore;
 pub use points::Points;
 pub use schedule::{GamePreview, Schedule};

@@ -1,16 +1,16 @@
-use crate::{PlayerNumber, PlayerScore};
+use crate::PlayerScore;
 use uuid::Uuid;
 
 pub struct ScoreDetails {
     id: Uuid,
-    player_number: PlayerNumber,
+    player_number: usize,
     player_score: PlayerScore,
 }
 
 pub struct LoadScoreDetailsParameters {
     pub game_id: Uuid,
     pub id: Uuid,
-    pub player_number: PlayerNumber,
+    pub player_number: usize,
     pub player_score: PlayerScore,
     pub round_number: u8,
 }
@@ -36,7 +36,7 @@ impl ScoreDetails {
         }
     }
 
-    pub fn player_number(&self) -> PlayerNumber {
+    pub fn player_number(&self) -> usize {
         self.player_number
     }
 
