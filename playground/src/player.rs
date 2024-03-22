@@ -1,5 +1,6 @@
 use crate::{PlayerScore, Points, Score};
 
+#[derive(Clone)]
 pub struct Player {
     number: usize,
     points_limit: Points,
@@ -14,6 +15,10 @@ pub struct NewPlayerParameters {
 
 impl Player {
     pub fn add_score(&mut self, score: Score) {
+        if self.is_winner() {
+            return;
+        }
+
         let player_score = self.get_player_score(score);
 
         if player_score.is_score() {
@@ -23,6 +28,7 @@ impl Player {
         self.scores.push(player_score);
     }
 
+    /// Total number of `score` points. Overthrow points are not included.
     pub fn points(&self) -> Points {
         self.points
     }
@@ -66,5 +72,9 @@ impl Player {
         let points: u16 = self.points.into();
 
         Points::from(points_limit - points)
+    }
+
+    pub fn scores(&self) -> &[PlayerScore] {
+        self.scores.as_slice()
     }
 }

@@ -3,18 +3,16 @@ use std::io;
 
 fn main() -> anyhow::Result<()> {
     let mut score_tracker = ScoreTracker::new(NewScoreTrackerParameters {
-        players_number: 2,
+        players_number: 3,
         points_limit: 301,
     });
 
     loop {
         let mut input_line = String::new();
 
-        println!(
-            "\nPlayer{} {}",
-            score_tracker.player_to_score() + 1,
-            score_tracker.player_to_score_points_to_win()
-        );
+        let player = score_tracker.player();
+
+        println!("\nPlayer{} {}", player.number() + 1, player.points_to_win());
 
         println!("Enter score: ");
 
@@ -38,7 +36,7 @@ fn main() -> anyhow::Result<()> {
         score_tracker.track(score);
 
         if let Some(winner) = score_tracker.winner() {
-            println!("\nPlayer{} won", winner + 1);
+            println!("\nPlayer{} won", winner.number() + 1);
 
             return Ok(());
         }

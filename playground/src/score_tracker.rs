@@ -2,11 +2,9 @@ use crate::{NewPlayerParameters, Player, Points, Score};
 use std::ops::Add;
 
 pub struct ScoreTracker {
-    player_to_score: usize,
     players_number: usize,
     players: Vec<Player>,
     points_limit: Points,
-    winner: Option<usize>,
 }
 
 pub struct NewScoreTrackerParameters {
@@ -15,6 +13,13 @@ pub struct NewScoreTrackerParameters {
 }
 
 impl ScoreTracker {
+    fn get_player(&self, number: usize) -> Player {
+        self.players
+            .get(number)
+            .cloned()
+            .unwrap_or_else(|| self.new_player(number))
+    }
+
     pub fn new(parameters: NewScoreTrackerParameters) -> Self {
         let NewScoreTrackerParameters {
             players_number,
@@ -22,65 +27,64 @@ impl ScoreTracker {
         } = parameters;
 
         ScoreTracker {
-            player_to_score: 0,
             players_number,
             players: vec![],
             points_limit: Points::from(points_limit),
-            winner: None,
         }
     }
 
-    fn pass_turn(&mut self) {
-        self.player_to_score = (self.player_to_score + 1) % self.players_number;
+    fn new_player(&self, number: usize) -> Player {
+        Player::new(NewPlayerParameters {
+            number,
+            points_limit: self.points_limit,
+        })
     }
 
-    pub fn player_to_score(&self) -> usize {
-        self.player_to_score
+    pub fn player(&self) -> Player {
+        self.players()
+            .into_iter()
+            .min_by(|a, b| a.scores().len().cmp(&b.scores().len()))
+            .unwrap_or(Player::new(NewPlayerParameters {
+                number: 0,
+                points_limit: self.points_limit,
+            }))
     }
 
-    pub fn player_to_score_points_to_win(&self) -> Points {
-        if let Some(player) = self.players.get(self.player_to_score) {
-            player.points_to_win()
-        } else {
-            self.points_limit
+    fn players(&self) -> Vec<Player> {
+        let mut players = Vec::with_capacity(self.players_number);
+
+        for number in 0..self.players_number {
+            players.push(self.get_player(number));
         }
+
+        players
     }
 
     pub fn track(&mut self, score: Score) {
-        if self.winner().is_some() {
-            return;
-        }
+        let player_number = self.player().number();
 
-        let Some(player) = self.players.get_mut(self.player_to_score) else {
+        let Some(player) = self.players.get_mut(player_number) else {
             self.track_first_score(score);
 
             return;
         };
 
         player.add_score(score);
-
-        if player.is_winner() {
-            self.winner = Some(player.number());
-        }
-
-        self.pass_turn();
     }
 
     fn track_first_score(&mut self, score: Score) {
         let mut player = Player::new(NewPlayerParameters {
-            number: self.player_to_score,
+            number: self.player().number(),
             points_limit: self.points_limit,
         });
 
         player.add_score(score);
 
         self.players.push(player);
-
-        self.pass_turn();
     }
 
-    pub fn winner(&self) -> Option<usize> {
-        self.winner
+    pub fn winner(&self) -> Option<&Player> {
+        self.players.iter().find(|p| p.is_winner())
     }
 }
 
