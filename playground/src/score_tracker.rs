@@ -6,12 +6,6 @@ pub struct ScoreTracker {
     points_limit: Points,
 }
 
-pub struct LoadScoreTrackerParameters {
-    pub players_number: usize,
-    pub players: Vec<Player>,
-    pub points_limit: u16,
-}
-
 pub struct NewScoreTrackerParameters {
     pub players_number: usize,
     pub points_limit: u16,
@@ -29,20 +23,6 @@ impl ScoreTracker {
         }
 
         self.players = players
-    }
-
-    pub fn load(parameters: LoadScoreTrackerParameters) -> Self {
-        let LoadScoreTrackerParameters {
-            players_number,
-            players,
-            points_limit,
-        } = parameters;
-
-        ScoreTracker {
-            players_number,
-            players,
-            points_limit: Points::from(points_limit),
-        }
     }
 
     pub fn new(parameters: NewScoreTrackerParameters) -> Self {

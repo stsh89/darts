@@ -1,6 +1,5 @@
 use crate::{
-    score_tracker::LoadScoreTrackerParameters, Error, NewPlayerParameters, Player, PlayerScore,
-    Score, ScoreDetails, ScoreTracker,
+    Error, NewScoreTrackerParameters, Player, PlayerScore, Score, ScoreDetails, ScoreTracker,
 };
 use uuid::Uuid;
 
@@ -38,26 +37,14 @@ impl GameState {
             score_details,
         } = parameters;
 
-        let mut players: Vec<Player> = Vec::with_capacity(PLAYERS_NUMBER);
-
-        for detail in score_details.iter() {
-            if let Some(player) = players.get_mut(detail.player_number()) {
-                player.add_player_score(detail.player_score());
-            } else {
-                let mut player = Player::new(NewPlayerParameters {
-                    number: detail.player_number(),
-                    points_limit: POINTS_LIMIT,
-                });
-                player.add_player_score(detail.player_score());
-                players.push(player);
-            }
-        }
-
-        let score_tracker = ScoreTracker::load(LoadScoreTrackerParameters {
+        let mut score_tracker = ScoreTracker::new(NewScoreTrackerParameters {
             players_number: PLAYERS_NUMBER,
             points_limit: POINTS_LIMIT,
-            players,
         });
+
+        for detail in score_details.iter() {
+            score_tracker.track(*detail.player_score().score());
+        }
 
         Ok(Self {
             game_id,
