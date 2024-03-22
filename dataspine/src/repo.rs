@@ -5,7 +5,7 @@ use crate::{
 };
 use playground::{
     referee, spectator, Error, GamePreview, GameState, LoadGameStateParameters,
-    LoadScoreDetailsParameters, PlayerScore, Score, ScoreDetails,
+    LoadRoundParameters, PlayerScore, Round, Score,
 };
 use sqlx::{pool::PoolConnection, postgres::PgPoolOptions, PgPool, Postgres};
 use uuid::Uuid;
@@ -40,11 +40,11 @@ impl playground::GetGameState for Repo {
             .map_err(|err| Error::Repo(err.into()))?
             .into_iter()
             .map(TryFrom::try_from)
-            .collect::<Result<Vec<ScoreDetails>, Error>>()?;
+            .collect::<Result<Vec<Round>, Error>>()?;
 
         let game_state = GameState::load(LoadGameStateParameters {
             game_id: game.id,
-            score_details,
+            rounds: score_details,
         })?;
 
         Ok(game_state)
@@ -81,7 +81,7 @@ impl referee::InsertScore for Repo {
     async fn insert_score(
         &self,
         parameters: referee::InsertScoreParameters,
-    ) -> Result<ScoreDetails, Error> {
+    ) -> Result<Round, Error> {
         let referee::InsertScoreParameters {
             game_id,
             player_number,
@@ -160,13 +160,13 @@ impl From<GameRow> for GamePreview {
     }
 }
 
-impl TryFrom<ScoreRow> for ScoreDetails {
+impl TryFrom<ScoreRow> for Round {
     type Error = Error;
 
     fn try_from(value: ScoreRow) -> Result<Self, Error> {
         let ScoreRow {
             id,
-            game_id,
+            game_id: _,
             player_number,
             points_number,
             points_kind,
@@ -180,14 +180,13 @@ impl TryFrom<ScoreRow> for ScoreDetails {
         }
         .try_into()?;
 
-        Ok(Self::load(LoadScoreDetailsParameters {
+        Ok(Self::load(LoadRoundParameters {
             id,
-            game_id,
             player_number: (player_number - 1)
                 .try_into()
                 .map_err(Into::<eyre::Report>::into)?,
             player_score: score,
-            round_number: round_number
+            number: round_number
                 .try_into()
                 .map_err(Into::<eyre::Report>::into)?,
         }))

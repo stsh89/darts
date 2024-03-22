@@ -1,7 +1,4 @@
-use crate::{
-    Error, GamePreview, GameState, GetGameState, LoadGameStateParameters, PlayerScore, Score,
-    ScoreDetails,
-};
+use crate::{Error, GamePreview, GameState, GetGameState, PlayerScore, Round, Score};
 use uuid::Uuid;
 
 pub trait DeleteScore {
@@ -16,7 +13,7 @@ pub trait InsertGamePreview {
 
 pub trait InsertScore {
     #[allow(async_fn_in_trait)]
-    async fn insert_score(&self, parameters: InsertScoreParameters) -> Result<ScoreDetails, Error>;
+    async fn insert_score(&self, parameters: InsertScoreParameters) -> Result<Round, Error>;
 }
 
 pub struct CancelLastScoreParameters<'a, G, S>
@@ -69,12 +66,11 @@ where
 
     let mut game_state = games.get_game_state(game_id).await?;
 
-    let Some(score_details) = game_state.last_score_detail() else {
+    let Some(round) = game_state.remove_last_round() else {
         return Err(Error::FailedPrecondition("Empty scores list".to_string()));
     };
 
-    scores.delete_score(score_details.id()).await?;
-    game_state = game_state.pop_score_detail()?;
+    scores.delete_score(round.id()).await?;
 
     Ok(game_state)
 }
@@ -95,7 +91,8 @@ where
 
     let mut game_state = games.get_game_state(game_id).await?;
 
-    let player = game_state.new_turn(score);
+    let mut score_tracker = game_state.score_tracker();
+    let player = score_tracker.track(score);
 
     let score_details = scores
         .insert_score(InsertScoreParameters {
@@ -108,12 +105,12 @@ where
         })
         .await?;
 
-    game_state = game_state.push_score_details(score_details)?;
+    game_state.add_round(score_details);
 
     Ok(game_state)
 }
 
-pub async fn start_game<G>(parameters: StartGameParameters<'_, G>) -> Result<GameState, Error>
+pub async fn start_game<G>(parameters: StartGameParameters<'_, G>) -> Result<GamePreview, Error>
 where
     G: InsertGamePreview,
 {
@@ -121,8 +118,5 @@ where
 
     let game_preview = games.insert_game_preview().await?;
 
-    GameState::load(LoadGameStateParameters {
-        game_id: game_preview.game_id(),
-        score_details: vec![],
-    })
+    Ok(game_preview)
 }

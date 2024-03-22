@@ -1,8 +1,9 @@
 use crate::playground::rpc;
 use chrono::{DateTime, Utc};
+use itertools::Itertools;
 use playground::{Error, GamePreview, GameState, Player, PlayerScore, Round};
 use prost_types::Timestamp;
-use std::time::SystemTime;
+use std::{collections::HashMap, time::SystemTime};
 use tonic::Status;
 use uuid::Uuid;
 
@@ -25,18 +26,19 @@ impl ToRpc<rpc::Game> for GamePreview {
 
 impl ToRpc<rpc::GameDetails> for GameState {
     fn to_rpc(self) -> rpc::GameDetails {
-        let player = self.player();
+        let score_tracker = self.score_tracker();
+        let player = score_tracker.player();
 
         rpc::GameDetails {
             game_id: self.game_id().to_string(),
-            winner: self
+            winner: score_tracker
                 .winner()
                 .map(|player| format!("Player{}", player.number() + 1))
                 .unwrap_or_default(),
             player: format!("Player{}", player.number() + 1),
             player_points_to_win: player.points_to_win().into(),
-            rounds: rounds(&self).into_iter().rev().map(ToRpc::to_rpc).collect(),
-            player_details: self.players().iter().map(ToRpc::to_rpc).collect(),
+            rounds: rounds(&self),
+            player_details: score_tracker.players().iter().map(ToRpc::to_rpc).collect(),
         }
     }
 }
@@ -65,14 +67,14 @@ impl ToRpc<rpc::Point> for PlayerScore {
     }
 }
 
-impl ToRpc<rpc::Round> for Round {
-    fn to_rpc(self) -> rpc::Round {
-        rpc::Round {
-            number: self.number.into(),
-            points: self.player_scores.into_iter().map(ToRpc::to_rpc).collect(),
-        }
-    }
-}
+// impl ToRpc<rpc::Round> for Round {
+//     fn to_rpc(self) -> rpc::Round {
+//         rpc::Round {
+//             number: self.number,
+//             points: self,
+//         }
+//     }
+// }
 
 impl ToRpc<Status> for Error {
     fn to_rpc(self) -> Status {
@@ -99,28 +101,72 @@ impl TryConvert<Uuid> for String {
     }
 }
 
-pub fn rounds(game_state: &GameState) -> Vec<Round> {
-    let rounds_number = game_state
-        .players()
-        .first()
-        .map(|p| p.scores().len())
-        .unwrap_or(0);
-    let mut rounds: Vec<Round> = Vec::with_capacity(rounds_number);
+// pub fn rounds(game_state: &GameState) -> Vec<Round> {
+//     let rounds_number = game_state
+//         .players()
+//         .first()
+//         .map(|p| p.scores().len())
+//         .unwrap_or(0);
+//     let mut rounds: Vec<Round> = Vec::with_capacity(rounds_number);
 
-    for round_number in 0..rounds_number {
-        for player in game_state.players() {
-            if let Some(score) = player.scores().get(round_number) {
-                if let Some(round) = rounds.get_mut(round_number) {
-                    round.player_scores.push(*score);
-                } else {
-                    rounds.push(Round {
-                        number: round_number as u8,
-                        player_scores: vec![*score],
-                    });
-                }
-            }
-        }
-    }
+//     for round_number in 0..rounds_number {
+//         for player in game_state.players() {
+//             if let Some(score) = player.scores().get(round_number) {
+//                 if let Some(round) = rounds.get_mut(round_number) {
+//                     round.player_scores.push(*score);
+//                 } else {
+//                     rounds.push(Round {
+//                         number: round_number as u8,
+//                         player_scores: vec![*score],
+//                     });
+//                 }
+//             }
+//         }
+//     }
 
+//     rounds
+// }
+
+pub fn rounds(game_state: &GameState) -> Vec<rpc::Round> {
+    let groups: HashMap<u8, Vec<&Round>> = game_state
+        .rounds()
+        .iter()
+        .into_grouping_map_by(|r| r.number())
+        .collect();
+
+    let mut rounds: Vec<rpc::Round> = groups
+        .into_iter()
+        .map(|(number, round)| rpc::Round {
+            number: number.into(),
+            points: round
+                .iter()
+                .map(|data| data.player_score().to_rpc())
+                .collect(),
+        })
+        .collect();
+
+    rounds.sort_by(|a, b| b.number.cmp(&a.number));
     rounds
+
+    // let players_number = 2;
+
+    // //TODO: calculate capacity in a more efficient way.
+    // let mut rounds = Vec::with_capacity(50);
+    // let mut round_number = 1;
+
+    // for chunk in game_state.rounds().chunks(players_number) {
+    //     let mut round = rpc::Round {
+    //         number: round_number,
+    //         points: Vec::with_capacity(players_number),
+    //     };
+
+    //     for data in chunk {
+    //         round.points.push(data.player_score().to_rpc());
+    //     }
+
+    //     rounds.push(round);
+    //     round_number += 1;
+    // }
+
+    // rounds
 }

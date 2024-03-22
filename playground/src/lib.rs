@@ -3,22 +3,22 @@ mod game_state;
 mod player;
 mod player_score;
 mod points;
+mod round;
 mod schedule;
 mod score;
-mod score_details;
 mod score_tracker;
 
 pub mod referee;
 pub mod spectator;
 
 pub use error::Error;
-pub use game_state::{GameState, LoadGameStateParameters, Round};
+pub use game_state::{GameState, LoadGameStateParameters};
 pub use player::{NewPlayerParameters, Player};
 pub use player_score::PlayerScore;
 pub use points::Points;
+pub use round::{LoadRoundParameters, Round};
 pub use schedule::{GamePreview, Schedule};
 pub use score::Score;
-pub use score_details::{LoadScoreDetailsParameters, ScoreDetails};
 pub use score_tracker::{NewScoreTrackerParameters, ScoreTracker};
 
 use uuid::Uuid;

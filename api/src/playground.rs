@@ -62,13 +62,13 @@ impl rpc::games_server::Games for Server {
         &self,
         _request: Request<rpc::CreateGameRequest>,
     ) -> Result<Response<rpc::Game>, Status> {
-        let game = referee::start_game(StartGameParameters { games: &self.repo })
+        let game_preview = referee::start_game(StartGameParameters { games: &self.repo })
             .await
             .map_err(ToRpc::to_rpc)?;
 
         Ok(Response::new(rpc::Game {
-            id: game.game_id().to_string(),
-            start_time: None,
+            id: game_preview.game_id().to_string(),
+            start_time: Some(game_preview.start_time().to_rpc()),
         }))
     }
 

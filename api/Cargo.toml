@@ -10,6 +10,7 @@ anyhow = { workspace = true }
 chrono = { workspace = true }
 clap = { version = "4.5.3", features = ["derive"] }
 dataspine = { workspace = true }
+itertools = "0.12.1"
 playground = { workspace = true }
 prost = { workspace = true }
 prost-types = { workspace = true }

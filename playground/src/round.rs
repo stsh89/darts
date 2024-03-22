@@ -1,39 +1,43 @@
 use crate::PlayerScore;
 use uuid::Uuid;
 
-pub struct ScoreDetails {
+pub struct Round {
     id: Uuid,
     player_number: usize,
     player_score: PlayerScore,
+    number: u8,
 }
 
-pub struct LoadScoreDetailsParameters {
-    pub game_id: Uuid,
+pub struct LoadRoundParameters {
     pub id: Uuid,
     pub player_number: usize,
     pub player_score: PlayerScore,
-    pub round_number: u8,
+    pub number: u8,
 }
 
-impl ScoreDetails {
+impl Round {
     pub fn id(&self) -> Uuid {
         self.id
     }
 
-    pub fn load(parameters: LoadScoreDetailsParameters) -> Self {
-        let LoadScoreDetailsParameters {
-            game_id: _,
+    pub fn load(parameters: LoadRoundParameters) -> Self {
+        let LoadRoundParameters {
             id,
             player_number,
             player_score,
-            round_number: _,
+            number,
         } = parameters;
 
         Self {
             id,
             player_number,
             player_score,
+            number,
         }
+    }
+
+    pub fn number(&self) -> u8 {
+        self.number
     }
 
     pub fn player_number(&self) -> usize {
