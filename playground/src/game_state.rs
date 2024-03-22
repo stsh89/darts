@@ -1,5 +1,5 @@
 use crate::{
-    score_tracker::LoadScoreTrackerParameters, Error, NewPlayerParameters, Player, PlayerNumber,
+    score_tracker::LoadScoreTrackerParameters, Error, NewPlayerParameters, Player,
     PlayerScore, Score, ScoreDetails, ScoreTracker,
 };
 use uuid::Uuid;
@@ -16,12 +16,6 @@ pub struct GameState {
 pub struct Round {
     pub number: u8,
     pub player_scores: Vec<PlayerScore>,
-}
-
-pub struct Turn {
-    pub round_number: u8,
-    pub player_number: PlayerNumber,
-    pub player_score: PlayerScore,
 }
 
 pub struct LoadGameStateParameters {
@@ -65,10 +59,6 @@ impl GameState {
             players,
         });
 
-        // for score_details in score_details {
-        //     score_tracker.track(score_details.player_score())?;
-        // }
-
         Ok(Self {
             game_id,
             score_details,
@@ -105,29 +95,29 @@ impl GameState {
         })
     }
 
-    pub fn rounds(&self) -> Vec<Round> {
-        let players_number = PlayerNumber::all().len();
+    // pub fn rounds(&self) -> Vec<Round> {
+    //     let players_number = PlayerNumber::all().len();
 
-        //TODO: calculate capacity in a more efficient way.
-        let mut rounds = Vec::with_capacity(50);
-        let mut round_number = 1;
+    //     //TODO: calculate capacity in a more efficient way.
+    //     let mut rounds = Vec::with_capacity(50);
+    //     let mut round_number = 1;
 
-        for chunk in self.score_details.chunks(players_number) {
-            let mut round = Round {
-                number: round_number,
-                player_scores: Vec::with_capacity(players_number),
-            };
+    //     for chunk in self.score_details.chunks(players_number) {
+    //         let mut round = Round {
+    //             number: round_number,
+    //             player_scores: Vec::with_capacity(players_number),
+    //         };
 
-            for data in chunk {
-                round.player_scores.push(data.player_score());
-            }
+    //         for data in chunk {
+    //             round.player_scores.push(data.player_score());
+    //         }
 
-            rounds.push(round);
-            round_number += 1;
-        }
+    //         rounds.push(round);
+    //         round_number += 1;
+    //     }
 
-        rounds
-    }
+    //     rounds
+    // }
 
     pub fn winner(&self) -> Option<&Player> {
         self.score_tracker.winner()

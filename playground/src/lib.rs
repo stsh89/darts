@@ -13,7 +13,7 @@ pub mod referee;
 pub mod spectator;
 
 pub use error::Error;
-pub use game_state::{GameState, LoadGameStateParameters, Round, Turn};
+pub use game_state::{GameState, LoadGameStateParameters, Round};
 pub use player::{NewPlayerParameters, Player};
 pub use player_number::PlayerNumber;
 pub use player_score::PlayerScore;

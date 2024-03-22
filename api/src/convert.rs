@@ -35,7 +35,7 @@ impl ToRpc<rpc::GameDetails> for GameState {
                 .unwrap_or_default(),
             player: format!("Player{}", player.number() + 1),
             player_points_to_win: player.points_to_win().into(),
-            rounds: self.rounds().into_iter().rev().map(ToRpc::to_rpc).collect(),
+            rounds: rounds(&self).into_iter().rev().map(ToRpc::to_rpc).collect(),
             player_details: self.players().iter().map(ToRpc::to_rpc).collect(),
         }
     }
@@ -97,4 +97,30 @@ impl TryConvert<Uuid> for String {
     fn try_convert(self) -> Result<Uuid, Status> {
         Uuid::parse_str(&self).map_err(|_err| Status::invalid_argument(format!("Uuid: {self}")))
     }
+}
+
+pub fn rounds(game_state: &GameState) -> Vec<Round> {
+    let rounds_number = game_state
+        .players()
+        .first()
+        .map(|p| p.scores().len())
+        .unwrap_or(0);
+    let mut rounds: Vec<Round> = Vec::with_capacity(rounds_number);
+
+    for round_number in 0..rounds_number {
+        for player in game_state.players() {
+            if let Some(score) = player.scores().get(round_number) {
+                if let Some(round) = rounds.get_mut(round_number) {
+                    round.player_scores.push(*score);
+                } else {
+                    rounds.push(Round {
+                        number: round_number as u8,
+                        player_scores: vec![*score],
+                    });
+                }
+            }
+        }
+    }
+
+    rounds
 }
