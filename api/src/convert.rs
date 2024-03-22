@@ -52,13 +52,15 @@ impl ToRpc<rpc::PlayerDetails> for &Player {
 
 impl ToRpc<rpc::Point> for PlayerScore {
     fn to_rpc(self) -> rpc::Point {
-        rpc::Point {
-            kind: match self {
-                PlayerScore::Score(_) => rpc::PointKind::Score,
-                PlayerScore::Overthrow(_) => rpc::PointKind::Overthrow,
-            }
-            .into(),
-            value: self.into_inner().into(),
+        match self {
+            PlayerScore::Regular(score) => rpc::Point {
+                kind: rpc::PointKind::Score.into(),
+                value: score.points().into(),
+            },
+            PlayerScore::Overthrow(score) => rpc::Point {
+                kind: rpc::PointKind::Overthrow.into(),
+                value: score.points().into(),
+            },
         }
     }
 }

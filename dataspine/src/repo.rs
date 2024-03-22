@@ -193,7 +193,7 @@ impl TryFrom<ScoreRow> for ScoreDetails {
 impl From<PlayerScore> for Points {
     fn from(value: PlayerScore) -> Self {
         match value {
-            PlayerScore::Score(score) => Self {
+            PlayerScore::Regular(score) => Self {
                 kind: POINTS_KIND_SCORE.to_string(),
                 number: score.points().into(),
             },
@@ -212,7 +212,7 @@ impl TryFrom<Points> for PlayerScore {
         let Points { kind, number } = value;
 
         if kind == POINTS_KIND_SCORE {
-            return Ok(PlayerScore::Score(Score::try_from(number)?));
+            return Ok(PlayerScore::Regular(Score::try_from(number)?));
         }
 
         if kind == POINTS_KIND_OVERTHROW {

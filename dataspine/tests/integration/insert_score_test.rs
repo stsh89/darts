@@ -1,7 +1,7 @@
 use dataspine::Repo;
 use playground::{
     referee::{InsertGamePreview, InsertScore, InsertScoreParameters},
-    PlayerNumber, PlayerScore,
+    PlayerNumber, PlayerScore, Points, Score,
 };
 use sqlx::PgPool;
 
@@ -14,7 +14,7 @@ async fn it_inserts_score(pool: PgPool) -> anyhow::Result<()> {
         .insert_score(InsertScoreParameters {
             game_id: game_preview.game_id(),
             player_number: PlayerNumber::One,
-            player_score: PlayerScore::score(17),
+            player_score: PlayerScore::regular(Score::try_from(17)?),
             round_number: 1,
         })
         .await?;
@@ -23,7 +23,11 @@ async fn it_inserts_score(pool: PgPool) -> anyhow::Result<()> {
         Into::<i32>::into(score_details.player_number()),
         Into::<i32>::into(PlayerNumber::One)
     );
-    assert_eq!(score_details.player_score().into_inner(), 17);
+
+    match score_details.player_score() {
+        PlayerScore::Regular(score) => assert_eq!(score.points(), Points::from(17)),
+        _ => assert!(false),
+    }
 
     Ok(())
 }

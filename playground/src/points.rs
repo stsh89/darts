@@ -1,6 +1,6 @@
 use std::{fmt::Display, ops::Add};
 
-#[derive(Clone, Copy, Default, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
 pub struct Points(u16);
 
 impl Add for Points {

@@ -21,7 +21,7 @@ impl Player {
 
         let player_score = self.get_player_score(score);
 
-        if player_score.is_score() {
+        if player_score.is_regular() {
             self.points = self.points + score.points();
         }
 
@@ -33,12 +33,14 @@ impl Player {
             return;
         }
 
-        if player_score.is_score() && ((self.points + player_score.points()) > self.points_limit) {
+        if player_score.is_regular()
+            && ((self.points + player_score.score().points()) > self.points_limit)
+        {
             return;
         }
 
         if player_score.is_overthrow()
-            && ((self.points + player_score.points()) <= self.points_limit)
+            && ((self.points + player_score.score().points()) <= self.points_limit)
         {
             return;
         }
@@ -54,7 +56,7 @@ impl Player {
         if self.score_overthrow(score) {
             PlayerScore::Overthrow(score)
         } else {
-            PlayerScore::Score(score)
+            PlayerScore::Regular(score)
         }
     }
 
