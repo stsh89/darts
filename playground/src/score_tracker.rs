@@ -1,10 +1,15 @@
 use crate::{NewPlayerParameters, Player, Points, Score};
-use std::ops::Add;
 
 pub struct ScoreTracker {
     players_number: usize,
     players: Vec<Player>,
     points_limit: Points,
+}
+
+pub struct LoadScoreTrackerParameters {
+    pub players_number: usize,
+    pub players: Vec<Player>,
+    pub points_limit: u16,
 }
 
 pub struct NewScoreTrackerParameters {
@@ -13,11 +18,31 @@ pub struct NewScoreTrackerParameters {
 }
 
 impl ScoreTracker {
-    fn get_player(&self, number: usize) -> Player {
-        self.players
-            .get(number)
-            .cloned()
-            .unwrap_or_else(|| self.new_player(number))
+    fn initialize_players(&mut self) {
+        let mut players = Vec::with_capacity(self.players_number);
+
+        for number in 0..self.players_number {
+            players.push(Player::new(NewPlayerParameters {
+                number,
+                points_limit: self.points_limit.into(),
+            }));
+        }
+
+        self.players = players
+    }
+
+    pub fn load(parameters: LoadScoreTrackerParameters) -> Self {
+        let LoadScoreTrackerParameters {
+            players_number,
+            players,
+            points_limit,
+        } = parameters;
+
+        ScoreTracker {
+            players_number,
+            players,
+            points_limit: Points::from(points_limit),
+        }
     }
 
     pub fn new(parameters: NewScoreTrackerParameters) -> Self {
@@ -26,78 +51,47 @@ impl ScoreTracker {
             points_limit,
         } = parameters;
 
-        ScoreTracker {
+        let mut score_tracker = ScoreTracker {
             players_number,
             players: vec![],
             points_limit: Points::from(points_limit),
-        }
-    }
-
-    fn new_player(&self, number: usize) -> Player {
-        Player::new(NewPlayerParameters {
-            number,
-            points_limit: self.points_limit,
-        })
-    }
-
-    pub fn player(&self) -> Player {
-        self.players()
-            .into_iter()
-            .min_by(|a, b| a.scores().len().cmp(&b.scores().len()))
-            .unwrap_or(Player::new(NewPlayerParameters {
-                number: 0,
-                points_limit: self.points_limit,
-            }))
-    }
-
-    fn players(&self) -> Vec<Player> {
-        let mut players = Vec::with_capacity(self.players_number);
-
-        for number in 0..self.players_number {
-            players.push(self.get_player(number));
-        }
-
-        players
-    }
-
-    pub fn track(&mut self, score: Score) {
-        let player_number = self.player().number();
-
-        let Some(player) = self.players.get_mut(player_number) else {
-            self.track_first_score(score);
-
-            return;
         };
 
-        player.add_score(score);
+        score_tracker.initialize_players();
+        score_tracker
     }
 
-    fn track_first_score(&mut self, score: Score) {
-        let mut player = Player::new(NewPlayerParameters {
-            number: self.player().number(),
-            points_limit: self.points_limit,
-        });
+    pub fn player(&self) -> &Player {
+        self.players
+            .iter()
+            .min_by(|a, b| a.scores().len().cmp(&b.scores().len()))
+            .expect("Error when trying to access player")
+    }
+
+    pub fn track(&mut self, score: Score) -> &Player {
+        let player = self
+            .players
+            .iter_mut()
+            .min_by(|a, b| a.scores().len().cmp(&b.scores().len()))
+            .expect("Error when trying to access player_mut");
 
         player.add_score(score);
 
-        self.players.push(player);
+        player
+    }
+
+    pub fn players(&self) -> &[Player] {
+        &self.players
+    }
+
+    pub fn points_limit(&self) -> Points {
+        self.points_limit
     }
 
     pub fn winner(&self) -> Option<&Player> {
         self.players.iter().find(|p| p.is_winner())
     }
 }
-
-pub trait AddScore {
-    fn add_score(&mut self, score: Score, game_score: &GameScore) -> PlayerScore;
-}
-
-pub trait TotalGameScore {
-    fn total_game_score(self) -> GameScore;
-}
-
-#[derive(PartialEq)]
-pub struct GameScore(u16);
 
 #[derive(Clone, Copy)]
 pub enum PlayerScore {
@@ -132,57 +126,8 @@ impl PlayerScore {
     pub fn is_score(&self) -> bool {
         matches!(self, PlayerScore::Score(_))
     }
-}
 
-impl GameScore {
-    pub fn new(x: u16) -> GameScore {
-        GameScore(x)
-    }
-
-    pub fn value(&self) -> u16 {
-        self.0
-    }
-}
-
-impl std::fmt::Display for GameScore {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl AddScore for Vec<PlayerScore> {
-    fn add_score(&mut self, score: Score, game_score: &GameScore) -> PlayerScore {
-        let player_game_score: GameScore = self.iter().total_game_score();
-
-        let player_score =
-            if (player_game_score + GameScore(score.points().into())).0 > game_score.0 {
-                PlayerScore::Overthrow(score)
-            } else {
-                PlayerScore::Score(score)
-            };
-
-        self.push(player_score);
-
-        player_score
-    }
-}
-
-impl<'a, T> TotalGameScore for T
-where
-    T: Iterator<Item = &'a PlayerScore>,
-{
-    fn total_game_score(self) -> GameScore {
-        self.fold(GameScore(0), |acc, x| match x {
-            PlayerScore::Score(score) => GameScore(score.points().into()) + acc,
-            PlayerScore::Overthrow(_score) => acc,
-        })
-    }
-}
-
-impl Add for GameScore {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        GameScore(self.0 + rhs.0)
+    pub fn is_overthrow(&self) -> bool {
+        matches!(self, PlayerScore::Overthrow(_))
     }
 }

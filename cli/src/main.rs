@@ -33,10 +33,10 @@ fn main() -> anyhow::Result<()> {
             }
         };
 
-        score_tracker.track(score);
+        let player = score_tracker.track(score);
 
-        if let Some(winner) = score_tracker.winner() {
-            println!("\nPlayer{} won", winner.number() + 1);
+        if player.is_winner() {
+            println!("\nPlayer{} won", player.number() + 1);
 
             return Ok(());
         }

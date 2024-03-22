@@ -26,6 +26,20 @@ impl PlayerNumber {
     }
 }
 
+impl From<usize> for PlayerNumber {
+    fn from(value: usize) -> Self {
+        if value == 0 {
+            return PlayerNumber::One;
+        }
+
+        if value == 1 {
+            return PlayerNumber::Two;
+        }
+
+        PlayerNumber::One
+    }
+}
+
 impl TryFrom<i32> for PlayerNumber {
     type Error = Error;
 

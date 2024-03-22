@@ -1,6 +1,6 @@
 use crate::playground::rpc;
 use chrono::{DateTime, Utc};
-use playground::{Error, GamePreview, GameState, PlayerScore, PlayerState, Round};
+use playground::{Error, GamePreview, GameState, Player, PlayerScore, Round};
 use prost_types::Timestamp;
 use std::time::SystemTime;
 use tonic::Status;
@@ -25,31 +25,27 @@ impl ToRpc<rpc::Game> for GamePreview {
 
 impl ToRpc<rpc::GameDetails> for GameState {
     fn to_rpc(self) -> rpc::GameDetails {
-        let current_player_state = self.current_player_state();
+        let player = self.player();
 
         rpc::GameDetails {
             game_id: self.game_id().to_string(),
             winner: self
                 .winner()
-                .map(|player| player.name().to_string())
+                .map(|player| format!("Player{}", player.number() + 1))
                 .unwrap_or_default(),
-            player: current_player_state.player_number().name().to_string(),
-            player_points_to_win: current_player_state.points_to_win().value().into(),
+            player: format!("Player{}", player.number() + 1),
+            player_points_to_win: player.points_to_win().into(),
             rounds: self.rounds().into_iter().rev().map(ToRpc::to_rpc).collect(),
-            player_details: self
-                .players_game_scores()
-                .into_iter()
-                .map(ToRpc::to_rpc)
-                .collect(),
+            player_details: self.players().iter().map(ToRpc::to_rpc).collect(),
         }
     }
 }
 
-impl ToRpc<rpc::PlayerDetails> for PlayerState {
+impl ToRpc<rpc::PlayerDetails> for &Player {
     fn to_rpc(self) -> rpc::PlayerDetails {
         rpc::PlayerDetails {
-            name: self.player_number().name().to_string(),
-            points_to_win: self.points_to_win().value().into(),
+            name: format!("Player{}", self.number() + 1),
+            points_to_win: self.points_to_win().into(),
         }
     }
 }

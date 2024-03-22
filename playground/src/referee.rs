@@ -1,6 +1,6 @@
 use crate::{
     Error, GamePreview, GameState, GetGameState, LoadGameStateParameters, PlayerNumber,
-    PlayerScore, Score, ScoreDetails, Turn,
+    PlayerScore, Score, ScoreDetails,
 };
 use uuid::Uuid;
 
@@ -69,11 +69,12 @@ where
 
     let mut game_state = games.get_game_state(game_id).await?;
 
-    let Some(score_details) = game_state.pop_score_details() else {
+    let Some(score_details) = game_state.last_score_detail() else {
         return Err(Error::FailedPrecondition("Empty scores list".to_string()));
     };
 
     scores.delete_score(score_details.id()).await?;
+    game_state = game_state.pop_score_detail()?;
 
     Ok(game_state)
 }
@@ -93,22 +94,21 @@ where
     } = parameters;
 
     let mut game_state = games.get_game_state(game_id).await?;
-    let Turn {
-        round_number,
-        player_number,
-        player_score,
-    } = game_state.new_turn(score)?;
+
+    let player = game_state.new_turn(score);
 
     let score_details = scores
         .insert_score(InsertScoreParameters {
             game_id,
-            player_number,
-            player_score,
-            round_number,
+            player_number: player.number().into(),
+            player_score: *player
+                .last_score()
+                .ok_or(Error::FailedPrecondition("No last score".to_string()))?,
+            round_number: player.round_number() as u8,
         })
         .await?;
 
-    game_state.push_score_details(score_details);
+    game_state = game_state.push_score_details(score_details)?;
 
     Ok(game_state)
 }

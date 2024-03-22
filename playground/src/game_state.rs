@@ -1,17 +1,16 @@
+use crate::{
+    score_tracker::LoadScoreTrackerParameters, Error, NewPlayerParameters, Player, PlayerNumber,
+    PlayerScore, Score, ScoreDetails, ScoreTracker,
+};
 use uuid::Uuid;
 
-use crate::{
-    AddScore, Error, GameScore, PlayerNumber, PlayerScore, Score, ScoreDetails, TotalGameScore,
-};
+const PLAYERS_NUMBER: usize = 2;
+const POINTS_LIMIT: u16 = 301;
 
 pub struct GameState {
     game_id: Uuid,
     score_details: Vec<ScoreDetails>,
-}
-
-pub struct PlayerState {
-    player_number: PlayerNumber,
-    points_to_win: GameScore,
+    score_tracker: ScoreTracker,
 }
 
 pub struct Round {
@@ -31,25 +30,12 @@ pub struct LoadGameStateParameters {
 }
 
 impl GameState {
-    pub fn current_player_state(&self) -> PlayerState {
-        let Some(details) = self.score_details.last() else {
-            return PlayerState::new(PlayerNumber::One, self.max_game_score());
-        };
-
-        let player_number = details.player_number().next_player_number();
-
-        PlayerState::new(player_number, self.player_points_to_win(player_number))
-    }
-
-    fn current_player_number(&self) -> PlayerNumber {
-        self.score_details
-            .last()
-            .map(|details| details.player_number().next_player_number())
-            .unwrap_or(PlayerNumber::One)
-    }
-
     pub fn game_id(&self) -> Uuid {
         self.game_id
+    }
+
+    pub fn last_score_detail(&self) -> Option<&ScoreDetails> {
+        self.score_details.last()
     }
 
     pub fn load(parameters: LoadGameStateParameters) -> Result<Self, Error> {
@@ -58,74 +44,65 @@ impl GameState {
             score_details,
         } = parameters;
 
+        let mut players: Vec<Player> = Vec::with_capacity(PLAYERS_NUMBER);
+
+        for detail in score_details.iter() {
+            if let Some(player) = players.get_mut(i32::from(detail.player_number()) as usize) {
+                player.add_player_score(detail.player_score());
+            } else {
+                let mut player = Player::new(NewPlayerParameters {
+                    number: i32::from(detail.player_number()) as usize,
+                    points_limit: POINTS_LIMIT,
+                });
+                player.add_player_score(detail.player_score());
+                players.push(player);
+            }
+        }
+
+        let score_tracker = ScoreTracker::load(LoadScoreTrackerParameters {
+            players_number: PLAYERS_NUMBER,
+            points_limit: POINTS_LIMIT,
+            players,
+        });
+
+        // for score_details in score_details {
+        //     score_tracker.track(score_details.player_score())?;
+        // }
+
         Ok(Self {
             game_id,
             score_details,
+            score_tracker,
         })
     }
 
-    fn max_game_score(&self) -> GameScore {
-        GameScore::new(301)
+    pub fn new_turn(&mut self, score: Score) -> &Player {
+        self.score_tracker.track(score)
     }
 
-    pub fn new_turn(&self, score: Score) -> Result<Turn, Error> {
-        let player_number = self.current_player_number();
-        let mut player_scores: Vec<PlayerScore> = self
-            .score_details
-            .iter()
-            .filter(|details| details.player_number() == player_number)
-            .map(|details| details.player_score())
-            .collect();
-
-        let player_score = player_scores.add_score(score, &self.max_game_score());
-
-        let round_number = if matches!(player_number, PlayerNumber::One) {
-            self.rounds().len() + 1
-        } else {
-            self.rounds().len()
-        }
-        .try_into()
-        .map_err(Into::<eyre::Report>::into)?;
-
-        Ok(Turn {
-            round_number,
-            player_number,
-            player_score,
-        })
+    pub fn player(&self) -> &Player {
+        self.score_tracker.player()
     }
 
-    fn player_game_score(&self, player_number: PlayerNumber) -> GameScore {
-        self.score_details
-            .iter()
-            .filter(|details| details.player_number() == player_number)
-            .map(|details| details.player_score())
-            .collect::<Vec<PlayerScore>>()
-            .iter()
-            .total_game_score()
+    pub fn players(&self) -> &[Player] {
+        self.score_tracker.players()
     }
 
-    pub fn players_game_scores(&self) -> Vec<PlayerState> {
-        PlayerNumber::all()
-            .into_iter()
-            .map(|player_number| {
-                PlayerState::new(player_number, self.player_points_to_win(player_number))
-            })
-            .collect()
+    pub fn pop_score_detail(mut self) -> Result<Self, Error> {
+        self.score_details.pop();
+        self.reload()
     }
 
-    //TODO: ensure substract operation correctness
-    fn player_points_to_win(&self, player_number: PlayerNumber) -> GameScore {
-        let value = self.max_game_score().value() - self.player_game_score(player_number).value();
-
-        GameScore::new(value)
-    }
-
-    pub fn pop_score_details(&mut self) -> Option<ScoreDetails> {
-        self.score_details.pop()
-    }
-
-    pub fn push_score_details(&mut self, score_details: ScoreDetails) {
+    pub fn push_score_details(mut self, score_details: ScoreDetails) -> Result<Self, Error> {
         self.score_details.push(score_details);
+        self.reload()
+    }
+
+    fn reload(self) -> Result<Self, Error> {
+        Self::load(LoadGameStateParameters {
+            game_id: self.game_id,
+            score_details: self.score_details,
+        })
     }
 
     pub fn rounds(&self) -> Vec<Round> {
@@ -152,34 +129,7 @@ impl GameState {
         rounds
     }
 
-    pub fn winner(&self) -> Option<PlayerNumber> {
-        let max_game_score = self.max_game_score();
-
-        for player_number in PlayerNumber::all() {
-            let score = self.player_game_score(player_number);
-
-            if score == max_game_score {
-                return Some(player_number);
-            }
-        }
-
-        None
-    }
-}
-
-impl PlayerState {
-    fn new(player_number: PlayerNumber, points_to_win: GameScore) -> Self {
-        Self {
-            player_number,
-            points_to_win,
-        }
-    }
-
-    pub fn player_number(&self) -> PlayerNumber {
-        self.player_number
-    }
-
-    pub fn points_to_win(&self) -> &GameScore {
-        &self.points_to_win
+    pub fn winner(&self) -> Option<&Player> {
+        self.score_tracker.winner()
     }
 }
