@@ -1,16 +1,16 @@
-use crate::{PlayerScore, Points, Score};
+use crate::{PlayerScore, Points, PointsLimit, Score};
 
 #[derive(Clone)]
 pub struct Player {
     number: usize,
-    points_limit: Points,
+    points_limit: PointsLimit,
     points: Points,
     scores: Vec<PlayerScore>,
 }
 
 pub struct NewPlayerParameters {
     pub number: usize,
-    pub points_limit: u16,
+    pub points_limit: PointsLimit,
 }
 
 impl Player {
@@ -19,7 +19,11 @@ impl Player {
             return;
         }
 
-        let player_score = self.get_player_score(score);
+        let player_score = if self.is_overthrow(score) {
+            PlayerScore::Overthrow(score)
+        } else {
+            PlayerScore::Regular(score)
+        };
 
         if player_score.is_regular() {
             self.points = self.points + score.points();
@@ -28,36 +32,8 @@ impl Player {
         self.scores.push(player_score);
     }
 
-    pub fn add_player_score(&mut self, player_score: PlayerScore) {
-        if self.is_winner() {
-            return;
-        }
-
-        if player_score.is_regular()
-            && ((self.points + player_score.score().points()) > self.points_limit)
-        {
-            return;
-        }
-
-        if player_score.is_overthrow()
-            && ((self.points + player_score.score().points()) <= self.points_limit)
-        {
-            return;
-        }
-
-        self.scores.push(player_score);
-    }
-
     pub fn is_winner(&self) -> bool {
-        self.points == self.points_limit
-    }
-
-    fn get_player_score(&mut self, score: Score) -> PlayerScore {
-        if self.score_overthrow(score) {
-            PlayerScore::Overthrow(score)
-        } else {
-            PlayerScore::Regular(score)
-        }
+        self.points == self.points_limit.points()
     }
 
     pub fn new(parameters: NewPlayerParameters) -> Self {
@@ -68,8 +44,8 @@ impl Player {
 
         Self {
             number,
-            points_limit: Points::from(points_limit),
-            points: Points::from(0),
+            points_limit,
+            points: Points::zero(),
             scores: Vec::with_capacity(20),
         }
     }
@@ -84,7 +60,7 @@ impl Player {
     }
 
     pub fn points_to_win(&self) -> Points {
-        let points_limit: u16 = self.points_limit.into();
+        let points_limit: u16 = self.points_limit.points().into();
         let points: u16 = self.points.into();
 
         Points::from(points_limit - points)
@@ -98,8 +74,10 @@ impl Player {
         self.scores.len()
     }
 
-    fn score_overthrow(&self, score: Score) -> bool {
-        (self.points + score.points()) > self.points_limit
+    fn is_overthrow(&self, score: Score) -> bool {
+        let total = self.points + score.points();
+
+        total > self.points_limit.points()
     }
 
     pub fn scores(&self) -> &[PlayerScore] {

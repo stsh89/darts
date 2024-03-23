@@ -1,14 +1,14 @@
-use crate::{NewPlayerParameters, Player, Points, Score};
+use crate::{NewPlayerParameters, Player, PointsLimit, Score};
 
 pub struct ScoreTracker {
     players_number: usize,
     players: Vec<Player>,
-    points_limit: Points,
+    points_limit: PointsLimit,
 }
 
 pub struct NewScoreTrackerParameters {
     pub players_number: usize,
-    pub points_limit: u16,
+    pub points_limit: PointsLimit,
 }
 
 impl ScoreTracker {
@@ -18,7 +18,7 @@ impl ScoreTracker {
         for number in 0..self.players_number {
             players.push(Player::new(NewPlayerParameters {
                 number,
-                points_limit: self.points_limit.into(),
+                points_limit: self.points_limit,
             }));
         }
 
@@ -34,7 +34,7 @@ impl ScoreTracker {
         let mut score_tracker = ScoreTracker {
             players_number,
             players: vec![],
-            points_limit: Points::from(points_limit),
+            points_limit,
         };
 
         score_tracker.initialize_players();
@@ -64,7 +64,7 @@ impl ScoreTracker {
         &self.players
     }
 
-    pub fn points_limit(&self) -> Points {
+    pub fn points_limit(&self) -> PointsLimit {
         self.points_limit
     }
 

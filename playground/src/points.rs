@@ -34,3 +34,13 @@ impl From<Points> for i32 {
         value.0.into()
     }
 }
+
+impl Points {
+    pub fn zero() -> Self {
+        Self(0)
+    }
+
+    pub fn is_zero(&self) -> bool {
+        self.0 == 0
+    }
+}
