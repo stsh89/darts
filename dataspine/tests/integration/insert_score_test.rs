@@ -19,7 +19,7 @@ async fn it_inserts_score(pool: PgPool) -> anyhow::Result<()> {
         })
         .await?;
 
-    assert_eq!(score_details.player_number(), 1);
+    assert_eq!(score_details.player_number().value(), 1);
 
     match score_details.player_score() {
         PlayerScore::Regular(score) => assert_eq!(score.points(), Points::from(17)),

@@ -1,9 +1,9 @@
-use playground::{NewScoreTrackerParameters, PointsLimit, Score, ScoreTracker};
+use playground::{NewScoreTrackerParameters, PointsLimit, PositiveInteger, Score, ScoreTracker};
 use std::io;
 
 fn main() -> anyhow::Result<()> {
     let mut score_tracker = ScoreTracker::new(NewScoreTrackerParameters {
-        players_number: 3,
+        players_number: PositiveInteger::new(3)?,
         points_limit: PointsLimit::try_from(301)?,
     });
 
@@ -12,7 +12,7 @@ fn main() -> anyhow::Result<()> {
 
         let player = score_tracker.player();
 
-        println!("\nPlayer{} {}", player.number() + 1, player.points_to_win());
+        println!("\nPlayer{} {}", player.number(), player.points_to_win());
 
         println!("Enter score: ");
 
@@ -36,7 +36,7 @@ fn main() -> anyhow::Result<()> {
         let player = score_tracker.track(score);
 
         if player.is_winner() {
-            println!("\nPlayer{} won", player.number() + 1);
+            println!("\nPlayer{} won", player.number());
 
             return Ok(());
         }

@@ -1,21 +1,21 @@
-use crate::{NewPlayerParameters, Player, PointsLimit, Score};
+use crate::{NewPlayerParameters, Player, PointsLimit, PositiveInteger, Score};
 
 pub struct ScoreTracker {
-    players_number: usize,
+    players_number: PositiveInteger,
     players: Vec<Player>,
     points_limit: PointsLimit,
 }
 
 pub struct NewScoreTrackerParameters {
-    pub players_number: usize,
+    pub players_number: PositiveInteger,
     pub points_limit: PointsLimit,
 }
 
 impl ScoreTracker {
     fn initialize_players(&mut self) {
-        let mut players = Vec::with_capacity(self.players_number);
+        let mut players = Vec::with_capacity(self.players_number.value());
 
-        for number in 0..self.players_number {
+        for number in self.players_number.range() {
             players.push(Player::new(NewPlayerParameters {
                 number,
                 points_limit: self.points_limit,

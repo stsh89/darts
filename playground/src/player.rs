@@ -1,15 +1,15 @@
-use crate::{PlayerScore, Points, PointsLimit, Score};
+use crate::{PlayerScore, Points, PointsLimit, PositiveInteger, Score};
 
 #[derive(Clone)]
 pub struct Player {
-    number: usize,
+    number: PositiveInteger,
     points_limit: PointsLimit,
     points: Points,
     scores: Vec<PlayerScore>,
 }
 
 pub struct NewPlayerParameters {
-    pub number: usize,
+    pub number: PositiveInteger,
     pub points_limit: PointsLimit,
 }
 
@@ -50,7 +50,7 @@ impl Player {
         }
     }
 
-    pub fn number(&self) -> usize {
+    pub fn number(&self) -> PositiveInteger {
         self.number
     }
 

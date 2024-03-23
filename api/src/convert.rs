@@ -33,9 +33,9 @@ impl ToRpc<rpc::GameDetails> for GameState {
             game_id: self.game_id().to_string(),
             winner: score_tracker
                 .winner()
-                .map(|player| format!("Player{}", player.number() + 1))
+                .map(|player| format!("Player{}", player.number()))
                 .unwrap_or_default(),
-            player: format!("Player{}", player.number() + 1),
+            player: format!("Player{}", player.number()),
             player_points_to_win: player.points_to_win().into(),
             rounds: rounds(&self),
             player_details: score_tracker.players().iter().map(ToRpc::to_rpc).collect(),
@@ -46,7 +46,7 @@ impl ToRpc<rpc::GameDetails> for GameState {
 impl ToRpc<rpc::PlayerDetails> for &Player {
     fn to_rpc(self) -> rpc::PlayerDetails {
         rpc::PlayerDetails {
-            name: format!("Player{}", self.number() + 1),
+            name: format!("Player{}", self.number()),
             points_to_win: self.points_to_win().into(),
         }
     }
@@ -101,43 +101,17 @@ impl TryConvert<Uuid> for String {
     }
 }
 
-// pub fn rounds(game_state: &GameState) -> Vec<Round> {
-//     let rounds_number = game_state
-//         .players()
-//         .first()
-//         .map(|p| p.scores().len())
-//         .unwrap_or(0);
-//     let mut rounds: Vec<Round> = Vec::with_capacity(rounds_number);
-
-//     for round_number in 0..rounds_number {
-//         for player in game_state.players() {
-//             if let Some(score) = player.scores().get(round_number) {
-//                 if let Some(round) = rounds.get_mut(round_number) {
-//                     round.player_scores.push(*score);
-//                 } else {
-//                     rounds.push(Round {
-//                         number: round_number as u8,
-//                         player_scores: vec![*score],
-//                     });
-//                 }
-//             }
-//         }
-//     }
-
-//     rounds
-// }
-
 pub fn rounds(game_state: &GameState) -> Vec<rpc::Round> {
-    let groups: HashMap<u8, Vec<&Round>> = game_state
+    let groups: HashMap<usize, Vec<&Round>> = game_state
         .rounds()
         .iter()
-        .into_grouping_map_by(|r| r.number())
+        .into_grouping_map_by(|r| r.number().value())
         .collect();
 
     let mut rounds: Vec<rpc::Round> = groups
         .into_iter()
         .map(|(number, round)| rpc::Round {
-            number: number.into(),
+            number: number.try_into().unwrap(),
             points: round
                 .iter()
                 .map(|data| data.player_score().to_rpc())

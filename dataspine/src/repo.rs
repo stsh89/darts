@@ -5,7 +5,7 @@ use crate::{
 };
 use playground::{
     referee, spectator, Error, GamePreview, GameState, LoadGameStateParameters,
-    LoadRoundParameters, PlayerScore, Round, Score,
+    LoadRoundParameters, PlayerScore, PositiveInteger, Round, Score,
 };
 use sqlx::{pool::PoolConnection, postgres::PgPoolOptions, PgPool, Postgres};
 use uuid::Uuid;
@@ -96,9 +96,7 @@ impl referee::InsertScore for Repo {
             .await?
             .insert_score(InsertScoreParameters {
                 game_id,
-                player_number: (player_number + 1)
-                    .try_into()
-                    .map_err(Into::<eyre::Report>::into)?,
+                player_number,
                 points_kind: points.kind,
                 points_number: points.number,
                 round_number: round_number.into(),
@@ -182,13 +180,9 @@ impl TryFrom<ScoreRow> for Round {
 
         Ok(Self::load(LoadRoundParameters {
             id,
-            player_number: (player_number - 1)
-                .try_into()
-                .map_err(Into::<eyre::Report>::into)?,
+            player_number: PositiveInteger::try_from(player_number)?,
             player_score: score,
-            number: round_number
-                .try_into()
-                .map_err(Into::<eyre::Report>::into)?,
+            number: PositiveInteger::try_from(round_number)?,
         }))
     }
 }
