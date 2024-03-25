@@ -1,8 +1,8 @@
-use crate::{Error, NewScoreTrackerParameters, Number, Points, PointsLimit, Round, ScoreTracker};
+use crate::{Error, NewScoreTrackerParameters, Number, Round, ScoreTracker};
 use uuid::Uuid;
 
 const PLAYERS_NUMBER: usize = 2;
-const POINTS_LIMIT: u16 = 301;
+const POINTS_LIMIT: usize = 301;
 
 pub struct GameState {
     game_id: Uuid,
@@ -39,8 +39,8 @@ impl GameState {
 
     pub fn score_tracker(&self) -> ScoreTracker {
         let mut score_tracker = ScoreTracker::new(NewScoreTrackerParameters {
-            players_number: players_number(),
-            points_limit: points_limit(),
+            players_number: unsafe { Number::new_unchecked(PLAYERS_NUMBER) },
+            points_limit: unsafe { Number::new_unchecked(POINTS_LIMIT) },
         });
 
         self.rounds().iter().for_each(|round| {
@@ -49,12 +49,4 @@ impl GameState {
 
         score_tracker
     }
-}
-
-fn players_number() -> Number {
-    Number::new(PLAYERS_NUMBER).expect("Positive integer should be more than 0")
-}
-
-fn points_limit() -> PointsLimit {
-    PointsLimit::try_from(Points::from(POINTS_LIMIT)).expect("Points limit should be more than 0")
 }

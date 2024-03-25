@@ -1,16 +1,16 @@
-use crate::{Number, PlayerScore, Points, PointsLimit, Score};
+use crate::{Number, PlayerScore, Points, Score};
 
 #[derive(Clone)]
 pub struct Player {
     number: Number,
-    points_limit: PointsLimit,
+    points_limit: Number,
     points: Points,
     scores: Vec<PlayerScore>,
 }
 
 pub struct NewPlayerParameters {
     pub number: Number,
-    pub points_limit: PointsLimit,
+    pub points_limit: Number,
 }
 
 impl Player {
@@ -33,7 +33,7 @@ impl Player {
     }
 
     pub fn is_winner(&self) -> bool {
-        self.points == self.points_limit.points()
+        self.points == Points::new(self.points_limit.value() as u16)
     }
 
     pub fn new(parameters: NewPlayerParameters) -> Self {
@@ -60,7 +60,7 @@ impl Player {
     }
 
     pub fn points_to_win(&self) -> Points {
-        let points_limit: u16 = self.points_limit.points().into();
+        let points_limit: u16 = self.points_limit.value() as u16;
         let points: u16 = self.points.into();
 
         Points::from(points_limit - points)
@@ -77,7 +77,7 @@ impl Player {
     fn is_overthrow(&self, score: Score) -> bool {
         let total = self.points + score.points();
 
-        total > self.points_limit.points()
+        total > Points::new(self.points_limit.value() as u16)
     }
 
     pub fn scores(&self) -> &[PlayerScore] {

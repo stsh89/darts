@@ -1,10 +1,10 @@
-use playground::{NewScoreTrackerParameters, Number, PointsLimit, Score, ScoreTracker};
+use playground::{NewScoreTrackerParameters, Number, Score, ScoreTracker};
 use std::io;
 
 fn main() -> anyhow::Result<()> {
     let mut score_tracker = ScoreTracker::new(NewScoreTrackerParameters {
         players_number: Number::new(3)?,
-        points_limit: PointsLimit::try_from(301)?,
+        points_limit: Number::new(301)?,
     });
 
     loop {

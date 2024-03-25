@@ -36,11 +36,15 @@ impl From<Points> for i32 {
 }
 
 impl Points {
-    pub fn zero() -> Self {
-        Self(0)
+    pub fn new(value: u16) -> Self {
+        Self(value)
     }
 
     pub fn is_zero(&self) -> bool {
         self.0 == 0
+    }
+
+    pub fn zero() -> Self {
+        Self(0)
     }
 }

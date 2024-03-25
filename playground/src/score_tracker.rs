@@ -1,16 +1,16 @@
 use std::ops::RangeInclusive;
 
-use crate::{NewPlayerParameters, Number, Player, PointsLimit, Score};
+use crate::{NewPlayerParameters, Number, Player, Score};
 
 pub struct ScoreTracker {
     players_number: Number,
     players: Vec<Player>,
-    points_limit: PointsLimit,
+    points_limit: Number,
 }
 
 pub struct NewScoreTrackerParameters {
     pub players_number: Number,
-    pub points_limit: PointsLimit,
+    pub points_limit: Number,
 }
 
 impl ScoreTracker {
@@ -67,7 +67,7 @@ impl ScoreTracker {
         &self.players
     }
 
-    pub fn points_limit(&self) -> PointsLimit {
+    pub fn points_limit(&self) -> Number {
         self.points_limit
     }
 
