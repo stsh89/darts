@@ -1,14 +1,14 @@
-use crate::{Error, Game, GamePreview, GetGameState, PlayerScore, Round, Score};
+use crate::{Error, Game, PlayerScore, Round, Score};
 use uuid::Uuid;
+
+pub trait SaveGame {
+    #[allow(async_fn_in_trait)]
+    async fn save_game(&self, game: &mut Game) -> Result<(), Error>;
+}
 
 pub trait DeleteScore {
     #[allow(async_fn_in_trait)]
     async fn delete_score(&self, id: Uuid) -> Result<(), Error>;
-}
-
-pub trait InsertGamePreview {
-    #[allow(async_fn_in_trait)]
-    async fn insert_game_preview(&self) -> Result<GamePreview, Error>;
 }
 
 pub trait InsertScore {
@@ -18,7 +18,7 @@ pub trait InsertScore {
 
 pub struct CancelLastScoreParameters<'a, G, S>
 where
-    G: GetGameState,
+    G: GetGame,
     S: DeleteScore,
 {
     pub game_id: Uuid,
@@ -28,13 +28,18 @@ where
 
 pub struct CountScoreParameters<'a, G, S>
 where
-    G: GetGameState,
+    G: GetGame,
     S: InsertScore,
 {
     pub game_id: Uuid,
     pub score: Score,
     pub games: &'a G,
     pub scores: &'a S,
+}
+
+pub trait GetGame {
+    #[allow(async_fn_in_trait)]
+    async fn get_game(&self, game_id: Uuid) -> Result<Game, Error>;
 }
 
 pub struct InsertScoreParameters {
@@ -46,7 +51,7 @@ pub struct InsertScoreParameters {
 
 pub struct StartGameParameters<'a, G>
 where
-    G: InsertGamePreview,
+    G: SaveGame,
 {
     pub games: &'a G,
 }
@@ -55,7 +60,7 @@ pub async fn cancel_last_score<G, S>(
     parameters: CancelLastScoreParameters<'_, G, S>,
 ) -> Result<Game, Error>
 where
-    G: GetGameState,
+    G: GetGame,
     S: DeleteScore,
 {
     let CancelLastScoreParameters {
@@ -64,7 +69,7 @@ where
         scores,
     } = parameters;
 
-    let mut game_state = games.get_game_state(game_id).await?;
+    let mut game_state = games.get_game(game_id).await?;
 
     let Some(round) = game_state.remove_last_round() else {
         return Err(Error::FailedPrecondition("Empty scores list".to_string()));
@@ -77,7 +82,7 @@ where
 
 pub async fn count_score<G, S>(parameters: CountScoreParameters<'_, G, S>) -> Result<Game, Error>
 where
-    G: GetGameState,
+    G: GetGame,
     S: InsertScore,
 {
     let CountScoreParameters {
@@ -87,7 +92,7 @@ where
         scores,
     } = parameters;
 
-    let mut game_state = games.get_game_state(game_id).await?;
+    let mut game_state = games.get_game(game_id).await?;
 
     let mut score_tracker = game_state.score_tracker();
     let player = score_tracker.track(score);
@@ -112,13 +117,15 @@ where
     Ok(game_state)
 }
 
-pub async fn start_game<G>(parameters: StartGameParameters<'_, G>) -> Result<GamePreview, Error>
+pub async fn start_game<G>(parameters: StartGameParameters<'_, G>) -> Result<Game, Error>
 where
-    G: InsertGamePreview,
+    G: SaveGame,
 {
     let StartGameParameters { games } = parameters;
 
-    let game_preview = games.insert_game_preview().await?;
+    let mut game = Game::new();
 
-    Ok(game_preview)
+    games.save_game(&mut game).await?;
+
+    Ok(game)
 }

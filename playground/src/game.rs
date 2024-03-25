@@ -1,17 +1,21 @@
 use crate::{Error, NewScoreTrackerParameters, Number, Round, ScoreTracker};
+use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 const PLAYERS_NUMBER: usize = 2;
 const POINTS_LIMIT: usize = 301;
 
+#[derive(Default)]
 pub struct Game {
-    id: Uuid,
+    id: Option<Uuid>,
     rounds: Vec<Round>,
+    start_time: Option<DateTime<Utc>>,
 }
 
-pub struct LoadGameStateParameters {
-    pub game_id: Uuid,
+pub struct LoadGameParameters {
+    pub id: Uuid,
     pub rounds: Vec<Round>,
+    pub start_time: DateTime<Utc>,
 }
 
 impl Game {
@@ -19,17 +23,30 @@ impl Game {
         self.rounds.push(score_details);
     }
 
-    pub fn game_id(&self) -> Uuid {
+    pub fn id(&self) -> Option<Uuid> {
         self.id
     }
 
-    pub fn load(parameters: LoadGameStateParameters) -> Result<Self, Error> {
-        let LoadGameStateParameters { game_id, rounds } = parameters;
+    pub fn is_persisted(&self) -> bool {
+        self.id.is_some()
+    }
+
+    pub fn load(parameters: LoadGameParameters) -> Result<Self, Error> {
+        let LoadGameParameters {
+            id,
+            rounds,
+            start_time,
+        } = parameters;
 
         Ok(Self {
-            id: game_id,
+            id: Some(id),
             rounds,
+            start_time: Some(start_time),
         })
+    }
+
+    pub fn new() -> Self {
+        Self::default()
     }
 
     pub fn remove_last_round(&mut self) -> Option<Round> {
@@ -51,5 +68,17 @@ impl Game {
         });
 
         score_tracker
+    }
+
+    pub fn start_time(&self) -> Option<DateTime<Utc>> {
+        self.start_time
+    }
+
+    pub fn set_id(&mut self, id: Uuid) {
+        self.id = Some(id);
+    }
+
+    pub fn set_start_time(&mut self, start_time: DateTime<Utc>) {
+        self.start_time = Some(start_time);
     }
 }

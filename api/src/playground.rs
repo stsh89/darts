@@ -62,13 +62,13 @@ impl rpc::games_server::Games for Server {
         &self,
         _request: Request<rpc::CreateGameRequest>,
     ) -> Result<Response<rpc::Game>, Status> {
-        let game_preview = referee::start_game(StartGameParameters { games: &self.repo })
+        let game = referee::start_game(StartGameParameters { games: &self.repo })
             .await
             .map_err(ToRpc::to_rpc)?;
 
         Ok(Response::new(rpc::Game {
-            id: game_preview.game_id().to_string(),
-            start_time: Some(game_preview.start_time().to_rpc()),
+            id: game.id().unwrap().to_string(),
+            start_time: game.start_time().map(ToRpc::to_rpc),
         }))
     }
 
@@ -78,30 +78,26 @@ impl rpc::games_server::Games for Server {
     ) -> Result<Response<rpc::GameDetails>, Status> {
         let rpc::GetGameDetailsRequest { game_id } = request.into_inner();
 
-        let game_state = spectator::get_game_state(spectator::GetGameParameters {
+        let game = spectator::get_game(spectator::GetGameParameters {
             games: &self.repo,
             game_id: game_id.try_convert()?,
         })
         .await
         .map_err(ToRpc::to_rpc)?;
 
-        Ok(Response::new(game_state.to_rpc()))
+        Ok(Response::new(game.to_rpc()))
     }
 
     async fn list_games(
         &self,
         _request: Request<rpc::ListGamesRequest>,
     ) -> Result<Response<rpc::ListGamesResponse>, Status> {
-        let schedule =
-            spectator::get_schedule(spectator::ListGamesParameters { games: &self.repo })
+        let game_previews =
+            spectator::list_game_previews(spectator::ListGamesParameters { games: &self.repo })
                 .await
                 .map_err(ToRpc::to_rpc)?;
 
-        let games = schedule
-            .into_game_previews()
-            .into_iter()
-            .map(ToRpc::to_rpc)
-            .collect();
+        let games = game_previews.into_iter().map(ToRpc::to_rpc).collect();
 
         Ok(Response::new(rpc::ListGamesResponse { games }))
     }

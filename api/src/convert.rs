@@ -30,7 +30,7 @@ impl ToRpc<rpc::GameDetails> for Game {
         let player = score_tracker.player();
 
         rpc::GameDetails {
-            game_id: self.game_id().to_string(),
+            game_id: self.id().unwrap().to_string(),
             winner: score_tracker
                 .winner()
                 .map(|player| format!("Player{}", player.number()))

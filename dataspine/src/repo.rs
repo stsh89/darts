@@ -4,8 +4,8 @@ use crate::{
     GameRow, InsertScoreParameters, ScoreRow,
 };
 use playground::{
-    referee, spectator, Error, Game, GamePreview, LoadGameStateParameters, LoadRoundParameters,
-    Number, PlayerScore, Round, Score,
+    referee, spectator, Error, Game, GamePreview, LoadGameParameters, LoadGamePreviewParameters,
+    LoadRoundParameters, Number, PlayerScore, Round, Score,
 };
 use sqlx::{pool::PoolConnection, postgres::PgPoolOptions, PgPool, Postgres};
 use uuid::Uuid;
@@ -22,32 +22,15 @@ pub struct Repo {
     pool: sqlx::Pool<sqlx::postgres::Postgres>,
 }
 
-impl playground::GetGameState for Repo {
-    async fn get_game_state(&self, game_id: Uuid) -> Result<Game, Error> {
-        let game: GameRow = self
-            .conn()
-            .await?
-            .find_game(game_id)
-            .await
-            .map_err(|err| Error::Repo(err.into()))?
-            .ok_or(Error::NotFound("Game not found".to_string()))?;
+impl spectator::GetGame for Repo {
+    async fn get_game(&self, id: Uuid) -> Result<Game, Error> {
+        get_game(self, id).await
+    }
+}
 
-        let score_details = self
-            .conn()
-            .await?
-            .list_scores(game_id)
-            .await
-            .map_err(|err| Error::Repo(err.into()))?
-            .into_iter()
-            .map(TryFrom::try_from)
-            .collect::<Result<Vec<Round>, Error>>()?;
-
-        let game_state = Game::load(LoadGameStateParameters {
-            game_id: game.id,
-            rounds: score_details,
-        })?;
-
-        Ok(game_state)
+impl referee::GetGame for Repo {
+    async fn get_game(&self, id: Uuid) -> Result<Game, Error> {
+        get_game(self, id).await
     }
 }
 
@@ -63,17 +46,23 @@ impl referee::DeleteScore for Repo {
     }
 }
 
-impl referee::InsertGamePreview for Repo {
-    async fn insert_game_preview(&self) -> Result<GamePreview, Error> {
-        let game = self
+impl referee::SaveGame for Repo {
+    async fn save_game(&self, game: &mut Game) -> Result<(), Error> {
+        if game.is_persisted() {
+            return Err(Error::Unexpected(eyre::eyre!("Game is already persisted")));
+        }
+
+        let game_row = self
             .conn()
             .await?
             .insert_game()
             .await
-            .map_err(|err| Error::Repo(err.into()))?
-            .into();
+            .map_err(|err| Error::Repo(err.into()))?;
 
-        Ok(game)
+        game.set_id(game_row.id);
+        game.set_start_time(game_row.insert_time);
+
+        Ok(())
     }
 }
 
@@ -154,7 +143,10 @@ impl From<GameRow> for GamePreview {
     fn from(value: GameRow) -> Self {
         let GameRow { id, insert_time } = value;
 
-        Self::new(id, insert_time)
+        Self::load(LoadGamePreviewParameters {
+            game_id: id,
+            start_time: insert_time,
+        })
     }
 }
 
@@ -229,4 +221,32 @@ impl TryFrom<Points> for PlayerScore {
 
         Err(Error::Unexpected(eyre::eyre!("Invalid points kind")))
     }
+}
+
+async fn get_game(repo: &Repo, id: Uuid) -> Result<Game, Error> {
+    let game_row: GameRow = repo
+        .conn()
+        .await?
+        .find_game(id)
+        .await
+        .map_err(|err| Error::Repo(err.into()))?
+        .ok_or(Error::NotFound("Game not found".to_string()))?;
+
+    let score_details = repo
+        .conn()
+        .await?
+        .list_scores(id)
+        .await
+        .map_err(|err| Error::Repo(err.into()))?
+        .into_iter()
+        .map(TryFrom::try_from)
+        .collect::<Result<Vec<Round>, Error>>()?;
+
+    let game = Game::load(LoadGameParameters {
+        id,
+        rounds: score_details,
+        start_time: game_row.insert_time,
+    })?;
+
+    Ok(game)
 }
