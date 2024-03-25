@@ -4,8 +4,8 @@ use uuid::Uuid;
 const PLAYERS_NUMBER: usize = 2;
 const POINTS_LIMIT: usize = 301;
 
-pub struct GameState {
-    game_id: Uuid,
+pub struct Game {
+    id: Uuid,
     rounds: Vec<Round>,
 }
 
@@ -14,19 +14,22 @@ pub struct LoadGameStateParameters {
     pub rounds: Vec<Round>,
 }
 
-impl GameState {
+impl Game {
     pub fn add_round(&mut self, score_details: Round) {
         self.rounds.push(score_details);
     }
 
     pub fn game_id(&self) -> Uuid {
-        self.game_id
+        self.id
     }
 
     pub fn load(parameters: LoadGameStateParameters) -> Result<Self, Error> {
         let LoadGameStateParameters { game_id, rounds } = parameters;
 
-        Ok(Self { game_id, rounds })
+        Ok(Self {
+            id: game_id,
+            rounds,
+        })
     }
 
     pub fn remove_last_round(&mut self) -> Option<Round> {

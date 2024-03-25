@@ -4,8 +4,8 @@ use crate::{
     GameRow, InsertScoreParameters, ScoreRow,
 };
 use playground::{
-    referee, spectator, Error, GamePreview, GameState, LoadGameStateParameters,
-    LoadRoundParameters, Number, PlayerScore, Round, Score,
+    referee, spectator, Error, Game, GamePreview, LoadGameStateParameters, LoadRoundParameters,
+    Number, PlayerScore, Round, Score,
 };
 use sqlx::{pool::PoolConnection, postgres::PgPoolOptions, PgPool, Postgres};
 use uuid::Uuid;
@@ -23,7 +23,7 @@ pub struct Repo {
 }
 
 impl playground::GetGameState for Repo {
-    async fn get_game_state(&self, game_id: Uuid) -> Result<GameState, Error> {
+    async fn get_game_state(&self, game_id: Uuid) -> Result<Game, Error> {
         let game: GameRow = self
             .conn()
             .await?
@@ -42,7 +42,7 @@ impl playground::GetGameState for Repo {
             .map(TryFrom::try_from)
             .collect::<Result<Vec<Round>, Error>>()?;
 
-        let game_state = GameState::load(LoadGameStateParameters {
+        let game_state = Game::load(LoadGameStateParameters {
             game_id: game.id,
             rounds: score_details,
         })?;

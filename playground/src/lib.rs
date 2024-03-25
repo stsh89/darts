@@ -1,5 +1,5 @@
 mod error;
-mod game_state;
+mod game;
 mod number;
 mod player;
 mod player_score;
@@ -13,7 +13,7 @@ pub mod referee;
 pub mod spectator;
 
 pub use error::Error;
-pub use game_state::{GameState, LoadGameStateParameters};
+pub use game::{Game, LoadGameStateParameters};
 pub use number::Number;
 pub use player::{NewPlayerParameters, Player};
 pub use player_score::PlayerScore;
@@ -27,5 +27,5 @@ use uuid::Uuid;
 
 pub trait GetGameState {
     #[allow(async_fn_in_trait)]
-    async fn get_game_state(&self, game_id: Uuid) -> Result<GameState, Error>;
+    async fn get_game_state(&self, game_id: Uuid) -> Result<Game, Error>;
 }

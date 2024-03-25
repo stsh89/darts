@@ -1,4 +1,4 @@
-use crate::{Error, GamePreview, GameState, GetGameState, PlayerScore, Round, Score};
+use crate::{Error, Game, GamePreview, GetGameState, PlayerScore, Round, Score};
 use uuid::Uuid;
 
 pub trait DeleteScore {
@@ -53,7 +53,7 @@ where
 
 pub async fn cancel_last_score<G, S>(
     parameters: CancelLastScoreParameters<'_, G, S>,
-) -> Result<GameState, Error>
+) -> Result<Game, Error>
 where
     G: GetGameState,
     S: DeleteScore,
@@ -75,9 +75,7 @@ where
     Ok(game_state)
 }
 
-pub async fn count_score<G, S>(
-    parameters: CountScoreParameters<'_, G, S>,
-) -> Result<GameState, Error>
+pub async fn count_score<G, S>(parameters: CountScoreParameters<'_, G, S>) -> Result<Game, Error>
 where
     G: GetGameState,
     S: InsertScore,

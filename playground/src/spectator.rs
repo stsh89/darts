@@ -1,4 +1,4 @@
-use crate::{Error, GamePreview, GameState, GetGameState, Schedule};
+use crate::{Error, Game, GamePreview, GetGameState, Schedule};
 use uuid::Uuid;
 
 pub trait ListGamePreviews {
@@ -21,7 +21,7 @@ where
     pub games: &'a G,
 }
 
-pub async fn get_game_state<G>(parameters: GetGameParameters<'_, G>) -> Result<GameState, Error>
+pub async fn get_game_state<G>(parameters: GetGameParameters<'_, G>) -> Result<Game, Error>
 where
     G: GetGameState,
 {

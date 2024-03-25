@@ -1,7 +1,7 @@
 use crate::playground::rpc;
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
-use playground::{Error, GamePreview, GameState, Player, PlayerScore, Round};
+use playground::{Error, Game, GamePreview, Player, PlayerScore, Round};
 use prost_types::Timestamp;
 use std::{collections::HashMap, time::SystemTime};
 use tonic::Status;
@@ -24,7 +24,7 @@ impl ToRpc<rpc::Game> for GamePreview {
     }
 }
 
-impl ToRpc<rpc::GameDetails> for GameState {
+impl ToRpc<rpc::GameDetails> for Game {
     fn to_rpc(self) -> rpc::GameDetails {
         let score_tracker = self.score_tracker();
         let player = score_tracker.player();
@@ -101,7 +101,7 @@ impl TryConvert<Uuid> for String {
     }
 }
 
-pub fn rounds(game_state: &GameState) -> Vec<rpc::Round> {
+pub fn rounds(game_state: &Game) -> Vec<rpc::Round> {
     let groups: HashMap<usize, Vec<&Round>> = game_state
         .rounds()
         .iter()
