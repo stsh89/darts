@@ -5,7 +5,7 @@ use crate::{
 };
 use playground::{
     referee, spectator, Error, GamePreview, GameState, LoadGameStateParameters,
-    LoadRoundParameters, PlayerScore, PositiveInteger, Round, Score,
+    LoadRoundParameters, Number, PlayerScore, Round, Score,
 };
 use sqlx::{pool::PoolConnection, postgres::PgPoolOptions, PgPool, Postgres};
 use uuid::Uuid;
@@ -172,17 +172,28 @@ impl TryFrom<ScoreRow> for Round {
             insert_time: _,
         } = value;
 
-        let score = Points {
+        let player_score = Points {
             kind: points_kind,
             number: points_number,
         }
         .try_into()?;
 
+        let player_number = Number::new(
+            player_number
+                .try_into()
+                .map_err(Into::<eyre::Report>::into)?,
+        )?;
+        let number = Number::new(
+            round_number
+                .try_into()
+                .map_err(Into::<eyre::Report>::into)?,
+        )?;
+
         Ok(Self::load(LoadRoundParameters {
             id,
-            player_number: PositiveInteger::try_from(player_number)?,
-            player_score: score,
-            number: PositiveInteger::try_from(round_number)?,
+            player_number,
+            player_score,
+            number,
         }))
     }
 }

@@ -1,18 +1,18 @@
-use crate::{PlayerScore, PositiveInteger};
+use crate::{Number, PlayerScore};
 use uuid::Uuid;
 
 pub struct Round {
     id: Uuid,
-    player_number: PositiveInteger,
+    player_number: Number,
     player_score: PlayerScore,
-    number: PositiveInteger,
+    number: Number,
 }
 
 pub struct LoadRoundParameters {
     pub id: Uuid,
-    pub player_number: PositiveInteger,
+    pub player_number: Number,
     pub player_score: PlayerScore,
-    pub number: PositiveInteger,
+    pub number: Number,
 }
 
 impl Round {
@@ -36,11 +36,11 @@ impl Round {
         }
     }
 
-    pub fn number(&self) -> PositiveInteger {
+    pub fn number(&self) -> Number {
         self.number
     }
 
-    pub fn player_number(&self) -> PositiveInteger {
+    pub fn player_number(&self) -> Number {
         self.player_number
     }
 

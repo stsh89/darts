@@ -97,7 +97,11 @@ where
     let score_details = scores
         .insert_score(InsertScoreParameters {
             game_id,
-            player_number: player.number().try_to_i32()?,
+            player_number: player
+                .number()
+                .value()
+                .try_into()
+                .map_err(Into::<eyre::Report>::into)?,
             player_score: *player
                 .last_score()
                 .ok_or(Error::FailedPrecondition("No last score".to_string()))?,

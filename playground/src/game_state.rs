@@ -1,6 +1,4 @@
-use crate::{
-    Error, NewScoreTrackerParameters, Points, PointsLimit, PositiveInteger, Round, ScoreTracker,
-};
+use crate::{Error, NewScoreTrackerParameters, Number, Points, PointsLimit, Round, ScoreTracker};
 use uuid::Uuid;
 
 const PLAYERS_NUMBER: usize = 2;
@@ -53,8 +51,8 @@ impl GameState {
     }
 }
 
-fn players_number() -> PositiveInteger {
-    PositiveInteger::new(PLAYERS_NUMBER).expect("Positive integer should be more than 0")
+fn players_number() -> Number {
+    Number::new(PLAYERS_NUMBER).expect("Positive integer should be more than 0")
 }
 
 fn points_limit() -> PointsLimit {

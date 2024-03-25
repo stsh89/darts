@@ -1,23 +1,26 @@
-use crate::{NewPlayerParameters, Player, PointsLimit, PositiveInteger, Score};
+use std::ops::RangeInclusive;
+
+use crate::{NewPlayerParameters, Number, Player, PointsLimit, Score};
 
 pub struct ScoreTracker {
-    players_number: PositiveInteger,
+    players_number: Number,
     players: Vec<Player>,
     points_limit: PointsLimit,
 }
 
 pub struct NewScoreTrackerParameters {
-    pub players_number: PositiveInteger,
+    pub players_number: Number,
     pub points_limit: PointsLimit,
 }
 
 impl ScoreTracker {
     fn initialize_players(&mut self) {
         let mut players = Vec::with_capacity(self.players_number.value());
+        let range = RangeInclusive::new(1, self.players_number.value());
 
-        for number in self.players_number.range() {
+        for i in range {
             players.push(Player::new(NewPlayerParameters {
-                number,
+                number: unsafe { Number::new_unchecked(i) },
                 points_limit: self.points_limit,
             }));
         }
