@@ -47,8 +47,8 @@ impl referee::SaveGame for Repo {
             .await
             .map_err(|err| Error::Repo(err.into()))?;
 
-        game.set_id(game_row.id);
-        game.set_start_time(game_row.insert_time);
+        game.assign_id(game_row.id);
+        game.assign_start_time(game_row.insert_time);
 
         Ok(())
     }

@@ -13,7 +13,7 @@ pub mod referee;
 pub mod spectator;
 
 pub use error::Error;
-pub use game::{Game, LoadGameParameters, PlayerStats};
+pub use game::{Game, LoadGameParameters, NewGameParameters, PlayerStats};
 pub use game_preview::{GamePreview, LoadGamePreviewParameters};
 pub use number::Number;
 pub use player::{NewPlayerParameters, Player};

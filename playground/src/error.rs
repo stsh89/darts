@@ -1,5 +1,8 @@
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
+    #[error("Already exists: {0}")]
+    AlreadyExists(String),
+
     #[error("Invalid argument: {0}")]
     InvalidArgument(String),
 

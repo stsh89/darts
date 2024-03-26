@@ -1,21 +1,32 @@
-use playground::{NewScoreTrackerParameters, Number, Score, ScoreTracker};
+use playground::{Game, NewGameParameters, Number, Points, Score};
 use std::io;
 
 fn main() -> anyhow::Result<()> {
-    let mut score_tracker = ScoreTracker::new(NewScoreTrackerParameters {
+    let mut game = Game::new(NewGameParameters {
         players_number: Number::new(3)?,
-        points_limit: Number::new(301)?,
-    });
+        points_limit: Points::new(301),
+    })?;
 
     loop {
-        let mut input_line = String::new();
+        let Some(round_preview) = game.round_preview() else {
+            println!("Game is over");
+            println!(
+                "Player{} won",
+                game.winner()
+                    .expect("Missing winner number but it is expected")
+            );
 
-        let player = score_tracker.player();
+            return Ok(());
+        };
 
-        println!("\nPlayer{} {}", player.number(), player.points_to_win());
-
+        println!(
+            "\nPlayer{} {}",
+            round_preview.player_number(),
+            round_preview.points_to_win()
+        );
         println!("Enter score: ");
 
+        let mut input_line = String::new();
         let Ok(_) = io::stdin().read_line(&mut input_line) else {
             continue;
         };
@@ -25,20 +36,12 @@ fn main() -> anyhow::Result<()> {
             continue;
         };
 
-        let score = match Score::try_from(x) {
-            Ok(score) => score,
+        match Score::try_from(x) {
+            Ok(score) => game.count_score(score)?,
             Err(err) => {
                 println!("{err}");
                 continue;
             }
         };
-
-        let player = score_tracker.track(score);
-
-        if player.is_winner() {
-            println!("\nPlayer{} won", player.number());
-
-            return Ok(());
-        }
     }
 }

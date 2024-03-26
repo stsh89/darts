@@ -1,7 +1,9 @@
 use crate::playground::rpc;
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
-use playground::{Error, Game, GamePreview, Number, Player, PlayerScore, PlayerStats, Round};
+use playground::{
+    Error, Game, GamePreview, Number, Player, PlayerScore, PlayerStats, Points, Round,
+};
 use prost_types::Timestamp;
 use std::{collections::HashMap, time::SystemTime};
 use tonic::Status;
@@ -39,12 +41,12 @@ impl ToRpc<rpc::GameDetails> for Game {
                 "Player{}",
                 round
                     .as_ref()
-                    .map(|r| r.player_number)
+                    .map(|r| r.player_number())
                     .unwrap_or(Number::one())
             ),
             player_points_to_win: round
-                .map(|r| r.points_to_win)
-                .unwrap_or(Number::one())
+                .map(|r| r.points_to_win())
+                .unwrap_or(Points::zero())
                 .into(),
             rounds: rounds(&self),
             player_details: self
@@ -101,6 +103,7 @@ impl ToRpc<rpc::Point> for PlayerScore {
 impl ToRpc<Status> for Error {
     fn to_rpc(self) -> Status {
         match self {
+            Error::AlreadyExists(description) => Status::already_exists(description),
             Error::FailedPrecondition(description) => Status::failed_precondition(description),
             Error::InvalidArgument(description) => Status::invalid_argument(description),
             Error::NotFound(description) => Status::not_found(description),

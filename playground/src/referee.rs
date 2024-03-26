@@ -1,4 +1,4 @@
-use crate::{Error, Game, PlayerScore, Score};
+use crate::{Error, Game, NewGameParameters, Number, PlayerScore, Points, Score};
 use uuid::Uuid;
 
 pub trait GetGame {
@@ -58,7 +58,11 @@ where
 {
     let StartGameParameters { games } = parameters;
 
-    let mut game = Game::new();
+    let mut game = Game::new(NewGameParameters {
+        players_number: unsafe { Number::new_unchecked(2) },
+        points_limit: Points::new(301),
+    })?;
+
     games.save_game(&mut game).await?;
 
     Ok(game)

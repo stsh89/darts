@@ -1,32 +1,53 @@
 use std::collections::BTreeSet;
 
-use crate::{
-    Error, NewRoundParameters, NewScoreTrackerParameters, Number, Points, Round, Score,
-    ScoreTracker,
-};
+use crate::{Error, NewRoundParameters, Number, PlayerScore, Points, Round, Score};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 const PLAYERS_NUMBER: usize = 2;
-const POINTS_LIMIT: usize = 301;
+const POINTS_LIMIT: u16 = 301;
 
-#[derive(Default)]
 pub struct Game {
     id: Option<Uuid>,
+    players_number: Number,
+    points_limit: Points,
     rounds: BTreeSet<Round>,
     start_time: Option<DateTime<Utc>>,
 }
 
 pub struct RoundPreview {
-    pub round_number: Number,
-    pub player_number: Number,
-    pub points_to_win: Number,
+    player_number: Number,
+    points_limit: Points,
+    points: Points,
+    round_number: Number,
+}
+
+impl RoundPreview {
+    pub fn player_number(&self) -> Number {
+        self.player_number
+    }
+
+    pub fn points_limit(&self) -> Points {
+        self.points_limit
+    }
+
+    pub fn points(&self) -> Points {
+        self.points
+    }
+
+    pub fn round_number(&self) -> Number {
+        self.round_number
+    }
+
+    pub fn points_to_win(&self) -> Points {
+        Points::new(self.points_limit.value() - self.points.value())
+    }
 }
 
 pub struct PlayerStats {
     player_number: Number,
     points: Points,
-    points_limit: Number,
+    points_limit: Points,
 }
 
 impl PlayerStats {
@@ -42,12 +63,12 @@ impl PlayerStats {
         self.points
     }
 
-    pub fn points_limit(&self) -> Number {
+    pub fn points_limit(&self) -> Points {
         self.points_limit
     }
 
     pub fn points_to_win(&self) -> Points {
-        Points::new((self.points_limit.value() as u16) - self.points.value())
+        Points::new(self.points_limit.value() - self.points.value())
     }
 }
 
@@ -57,19 +78,56 @@ pub struct LoadGameParameters {
     pub start_time: DateTime<Utc>,
 }
 
-impl Game {
-    pub fn count_score(&mut self, score: Score) -> Result<(), Error> {
-        let mut score_tracker = self.score_tracker();
-        let player = score_tracker.track(score);
-        let round = Round::new(NewRoundParameters {
-            number: unsafe { Number::new_unchecked(player.scores().len()) },
-            player_number: player.number(),
-            player_score: *player.last_score().unwrap(),
-        })?;
+pub struct NewGameParameters {
+    pub players_number: Number,
+    pub points_limit: Points,
+}
 
-        self.rounds.insert(round);
+impl Game {
+    fn assign_points_limit(&mut self, points_limit: Points) -> Result<(), Error> {
+        if points_limit.is_zero() {
+            return Err(Error::InvalidArgument(
+                "Points limit cannot be zero".to_string(),
+            ));
+        }
+
+        self.points_limit = points_limit;
 
         Ok(())
+    }
+
+    fn assign_players_number(&mut self, players_number: Number) {
+        self.players_number = players_number;
+    }
+
+    fn assign_rounds(&mut self, rounds: Vec<Round>) {
+        self.rounds = BTreeSet::from_iter(rounds);
+    }
+
+    pub fn count_score(&mut self, score: Score) -> Result<(), Error> {
+        let Some(round_preview) = self.round_preview() else {
+            return Err(Error::FailedPrecondition(
+                "Cannot count a score when Game is over".to_string(),
+            ));
+        };
+
+        let player_score = if score.points() > round_preview.points_to_win() {
+            PlayerScore::overthrow(score)
+        } else {
+            PlayerScore::regular(score)
+        };
+
+        let round = Round::new(NewRoundParameters {
+            number: round_preview.round_number,
+            player_number: round_preview.player_number,
+            player_score,
+        })?;
+
+        if self.rounds.insert(round) {
+            Ok(())
+        } else {
+            Err(Error::AlreadyExists("Round already exists".to_string()))
+        }
     }
 
     pub fn id(&self) -> Option<Uuid> {
@@ -87,23 +145,38 @@ impl Game {
             start_time,
         } = parameters;
 
-        Ok(Self {
-            id: Some(id),
-            rounds: BTreeSet::from_iter(rounds),
-            start_time: Some(start_time),
-        })
+        let mut game = Self::new(NewGameParameters {
+            players_number: unsafe { Number::new_unchecked(PLAYERS_NUMBER) },
+            points_limit: Points::new(POINTS_LIMIT),
+        })?;
+
+        game.assign_id(id);
+        game.assign_rounds(rounds);
+        game.assign_start_time(start_time);
+
+        Ok(game)
     }
 
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(parameters: NewGameParameters) -> Result<Self, Error> {
+        let NewGameParameters {
+            points_limit,
+            players_number,
+        } = parameters;
+
+        let mut game = Self::template();
+
+        game.assign_players_number(players_number);
+        game.assign_points_limit(points_limit)?;
+
+        Ok(game)
     }
 
     pub fn players_stats(&self) -> Vec<PlayerStats> {
-        let mut acc: Vec<PlayerStats> = (1..=PLAYERS_NUMBER)
+        let mut acc: Vec<PlayerStats> = (1..=self.players_number.value())
             .map(|player_number| PlayerStats {
                 player_number: unsafe { Number::new_unchecked(player_number) },
                 points: Points::zero(),
-                points_limit: unsafe { Number::new_unchecked(POINTS_LIMIT) },
+                points_limit: self.points_limit,
             })
             .collect();
 
@@ -116,7 +189,7 @@ impl Game {
     }
 
     fn players_number(&self) -> Number {
-        unsafe { Number::new_unchecked(PLAYERS_NUMBER) }
+        self.players_number
     }
 
     pub fn round_preview(&self) -> Option<RoundPreview> {
@@ -128,7 +201,8 @@ impl Game {
             return Some(RoundPreview {
                 round_number: Number::one(),
                 player_number: Number::one(),
-                points_to_win: unsafe { Number::new_unchecked(POINTS_LIMIT) },
+                points: Points::zero(),
+                points_limit: self.points_limit,
             });
         };
 
@@ -138,23 +212,26 @@ impl Game {
         if player_number == self.players_number() {
             round_number.increment();
             player_number = Number::one();
+        } else {
+            player_number.increment();
         }
 
-        let points_to_win: Points = self
+        let points: Points = self
             .rounds
             .iter()
             .filter(|round| round.player_number() == player_number)
             .map(|round| round.player_score().game_points())
             .sum();
 
-        if points_to_win.is_zero() {
+        if points == self.points_limit {
             return None;
         }
 
         Some(RoundPreview {
             round_number,
             player_number,
-            points_to_win: unsafe { Number::new_unchecked(points_to_win.value().into()) },
+            points_limit: self.points_limit,
+            points,
         })
     }
 
@@ -162,29 +239,26 @@ impl Game {
         &self.rounds
     }
 
-    fn score_tracker(&self) -> ScoreTracker {
-        let mut score_tracker = ScoreTracker::new(NewScoreTrackerParameters {
-            players_number: unsafe { Number::new_unchecked(PLAYERS_NUMBER) },
-            points_limit: unsafe { Number::new_unchecked(POINTS_LIMIT) },
-        });
-
-        self.rounds().iter().for_each(|round| {
-            score_tracker.track(*round.player_score().score());
-        });
-
-        score_tracker
-    }
-
-    pub fn set_id(&mut self, id: Uuid) {
+    pub fn assign_id(&mut self, id: Uuid) {
         self.id = Some(id);
     }
 
-    pub fn set_start_time(&mut self, start_time: DateTime<Utc>) {
+    pub fn assign_start_time(&mut self, start_time: DateTime<Utc>) {
         self.start_time = Some(start_time);
     }
 
     pub fn start_time(&self) -> Option<DateTime<Utc>> {
         self.start_time
+    }
+
+    fn template() -> Self {
+        Self {
+            id: None,
+            points_limit: Points::zero(),
+            players_number: Number::one(),
+            rounds: BTreeSet::new(),
+            start_time: None,
+        }
     }
 
     pub fn winner(&self) -> Option<Number> {
