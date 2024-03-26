@@ -1,6 +1,5 @@
 use crate::{Points, Score};
 
-#[derive(Clone, Copy)]
 pub enum PlayerScore {
     Regular(Score),
     Overthrow(Score),

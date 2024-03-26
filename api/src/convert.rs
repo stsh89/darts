@@ -76,7 +76,7 @@ impl ToRpc<rpc::PlayerDetails> for PlayerStats {
     }
 }
 
-impl ToRpc<rpc::Point> for PlayerScore {
+impl ToRpc<rpc::Point> for &PlayerScore {
     fn to_rpc(self) -> rpc::Point {
         match self {
             PlayerScore::Regular(score) => rpc::Point {

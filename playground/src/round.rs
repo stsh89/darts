@@ -2,7 +2,6 @@ use crate::{Error, Number, PlayerScore};
 use std::cmp::Ordering;
 use uuid::Uuid;
 
-#[derive(Clone)]
 pub struct Round {
     id: Option<Uuid>,
     number: Number,
@@ -99,7 +98,7 @@ impl Round {
         self.player_number
     }
 
-    pub fn player_score(&self) -> PlayerScore {
-        self.player_score
+    pub fn player_score(&self) -> &PlayerScore {
+        &self.player_score
     }
 }

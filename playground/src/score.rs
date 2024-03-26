@@ -2,7 +2,7 @@ use crate::{Error, Points};
 
 const POINTS_LIMIT: u16 = 180;
 
-#[derive(Clone, Copy)]
+// #[derive(Clone, Copy)]
 pub struct Score(Points);
 
 impl Score {

@@ -1,6 +1,5 @@
 use crate::{Number, PlayerScore, Points, Score};
 
-#[derive(Clone)]
 pub struct Player {
     number: Number,
     points_limit: Number,
@@ -19,15 +18,13 @@ impl Player {
             return;
         }
 
-        let player_score = if self.is_overthrow(score) {
+        let player_score = if self.is_overthrow(&score) {
             PlayerScore::Overthrow(score)
         } else {
             PlayerScore::Regular(score)
         };
 
-        if player_score.is_regular() {
-            self.points = self.points + score.points();
-        }
+        self.points = self.points + player_score.game_points();
 
         self.scores.push(player_score);
     }
@@ -70,7 +67,7 @@ impl Player {
         self.scores.last()
     }
 
-    fn is_overthrow(&self, score: Score) -> bool {
+    fn is_overthrow(&self, score: &Score) -> bool {
         let total = self.points + score.points();
 
         total > Points::new(self.points_limit.value() as u16)
