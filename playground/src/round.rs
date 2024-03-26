@@ -2,6 +2,7 @@ use crate::{Error, Number, PlayerScore};
 use std::cmp::Ordering;
 use uuid::Uuid;
 
+#[derive(Clone)]
 pub struct Round {
     id: Option<Uuid>,
     number: Number,
@@ -47,8 +48,16 @@ impl Ord for Round {
 }
 
 impl Round {
+    pub fn assign_id(&mut self, id: Uuid) {
+        self.id = Some(id);
+    }
+
     pub fn id(&self) -> Option<Uuid> {
         self.id
+    }
+
+    pub fn is_persisted(&self) -> bool {
+        self.id.is_some()
     }
 
     pub fn load(parameters: LoadRoundParameters) -> Result<Self, Error> {

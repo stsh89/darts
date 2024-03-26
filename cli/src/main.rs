@@ -36,7 +36,7 @@ fn main() -> anyhow::Result<()> {
             continue;
         };
 
-        match Score::try_from(x) {
+        match Score::new(x) {
             Ok(score) => game.count_score(score)?,
             Err(err) => {
                 println!("{err}");
