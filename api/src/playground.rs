@@ -30,7 +30,7 @@ impl rpc::games_server::Games for Server {
     ) -> Result<Response<rpc::CountPointsResponse>, Status> {
         let rpc::CountPointsRequest { game_id, points } = request.into_inner();
 
-        let score = Score::try_from(points).map_err(ToRpc::to_rpc)?;
+        let score = Score::new(points as u16).map_err(ToRpc::to_rpc)?;
 
         let game_state = referee::count_score(referee::CountScoreParameters {
             games: &self.repo,

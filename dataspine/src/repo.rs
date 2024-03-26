@@ -1,5 +1,3 @@
-use std::num::TryFromIntError;
-
 use crate::{
     games::{FindGame, ListGames},
     scores::ListScores,
@@ -47,7 +45,7 @@ impl referee::SaveGame for Repo {
             )
             .fetch_one(transaction.as_mut())
             .await
-            .map_err(|err| Error::Repo(err.into()))?;
+            .map_err(eyre::Report::new)?;
 
             game.assign_id(row.id);
             game.assign_start_time(row.insert_time);
@@ -115,13 +113,10 @@ RETURNING id
             )
             .fetch_all(transaction.as_mut())
             .await
-            .map_err(|err| Error::Repo(err.into()))?;
+            .map_err(eyre::Report::new)?;
         }
 
-        transaction
-            .commit()
-            .await
-            .map_err(|err| Error::Repo(err.into()))?;
+        transaction.commit().await.map_err(eyre::Report::new)?;
 
         Ok(())
     }
@@ -134,7 +129,7 @@ impl spectator::ListGamePreviews for Repo {
             .await?
             .list_games()
             .await
-            .map_err(|err| Error::Repo(err.into()))?
+            .map_err(eyre::Report::new)?
             .into_iter()
             .map(Into::into)
             .collect();
@@ -145,21 +140,13 @@ impl spectator::ListGamePreviews for Repo {
 
 impl Repo {
     async fn conn(&self) -> Result<PoolConnection<Postgres>, Error> {
-        let conn = self
-            .pool
-            .acquire()
-            .await
-            .map_err(|err| Error::Repo(err.into()))?;
+        let conn = self.pool.acquire().await.map_err(eyre::Report::new)?;
 
         Ok(conn)
     }
 
     async fn transaction(&self) -> Result<Transaction<Postgres>, Error> {
-        let transaction = self
-            .pool
-            .begin()
-            .await
-            .map_err(|err| Error::Repo(err.into()))?;
+        let transaction = self.pool.begin().await.map_err(eyre::Report::new)?;
 
         Ok(transaction)
     }
@@ -168,7 +155,7 @@ impl Repo {
         let pool = PgPoolOptions::new()
             .connect(database_url)
             .await
-            .map_err(|err| Error::Repo(err.into()))?;
+            .map_err(eyre::Report::new)?;
 
         Ok(Self { pool })
     }
@@ -250,9 +237,7 @@ impl TryFrom<Points> for PlayerScore {
     fn try_from(value: Points) -> Result<Self, Error> {
         let Points { kind, number } = value;
 
-        let number = number
-            .try_into()
-            .map_err(|err: TryFromIntError| Error::Repo(err.into()))?;
+        let number = number.try_into().map_err(eyre::Report::new)?;
 
         if kind == POINTS_KIND_SCORE {
             return Ok(PlayerScore::Regular(Score::new(number)?));
@@ -272,7 +257,7 @@ async fn get_game(repo: &Repo, id: Uuid) -> Result<Game, Error> {
         .await?
         .find_game(id)
         .await
-        .map_err(|err| Error::Repo(err.into()))?
+        .map_err(eyre::Report::new)?
         .ok_or(Error::NotFound("Game not found".to_string()))?;
 
     let score_details = repo
@@ -280,7 +265,7 @@ async fn get_game(repo: &Repo, id: Uuid) -> Result<Game, Error> {
         .await?
         .list_scores(id)
         .await
-        .map_err(|err| Error::Repo(err.into()))?
+        .map_err(eyre::Report::new)?
         .into_iter()
         .map(TryFrom::try_from)
         .collect::<Result<Vec<Round>, Error>>()?;

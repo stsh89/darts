@@ -107,7 +107,6 @@ impl ToRpc<Status> for Error {
             Error::FailedPrecondition(description) => Status::failed_precondition(description),
             Error::InvalidArgument(description) => Status::invalid_argument(description),
             Error::NotFound(description) => Status::not_found(description),
-            Error::Repo(report) => Status::internal(report.to_string()),
             Error::Unexpected(report) => Status::internal(report.to_string()),
         }
     }
