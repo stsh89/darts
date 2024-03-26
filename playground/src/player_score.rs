@@ -1,4 +1,4 @@
-use crate::Score;
+use crate::{Points, Score};
 
 #[derive(Clone, Copy)]
 pub enum PlayerScore {
@@ -19,6 +19,13 @@ impl PlayerScore {
         match self {
             PlayerScore::Regular(score) => score,
             PlayerScore::Overthrow(score) => score,
+        }
+    }
+
+    pub fn game_points(&self) -> Points {
+        match self {
+            PlayerScore::Regular(score) => score.points(),
+            PlayerScore::Overthrow(_) => Points::zero(),
         }
     }
 

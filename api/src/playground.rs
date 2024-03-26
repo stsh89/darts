@@ -19,21 +19,9 @@ pub struct Server {
 impl rpc::games_server::Games for Server {
     async fn cancel_last_score(
         &self,
-        request: Request<rpc::CancelLastScoreRequest>,
+        _request: Request<rpc::CancelLastScoreRequest>,
     ) -> Result<Response<rpc::CancelLastScoreResponse>, Status> {
-        let rpc::CancelLastScoreRequest { game_id } = request.into_inner();
-
-        let game_state = referee::cancel_last_score(referee::CancelLastScoreParameters {
-            game_id: game_id.try_convert()?,
-            games: &self.repo,
-            scores: &self.repo,
-        })
-        .await
-        .map_err(ToRpc::to_rpc)?;
-
-        Ok(Response::new(rpc::CancelLastScoreResponse {
-            game_details: Some(game_state.to_rpc()),
-        }))
+        Ok(Response::new(rpc::CancelLastScoreResponse::default()))
     }
 
     async fn count_points(
@@ -48,7 +36,6 @@ impl rpc::games_server::Games for Server {
             games: &self.repo,
             game_id: game_id.try_convert()?,
             score,
-            scores: &self.repo,
         })
         .await
         .map_err(ToRpc::to_rpc)?;

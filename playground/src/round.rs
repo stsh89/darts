@@ -1,26 +1,57 @@
-use crate::{Number, PlayerScore};
+use crate::{Error, Number, PlayerScore};
+use std::cmp::Ordering;
 use uuid::Uuid;
 
 pub struct Round {
-    id: Uuid,
+    id: Option<Uuid>,
+    number: Number,
     player_number: Number,
     player_score: PlayerScore,
-    number: Number,
 }
 
 pub struct LoadRoundParameters {
     pub id: Uuid,
+    pub number: Number,
     pub player_number: Number,
     pub player_score: PlayerScore,
+}
+
+pub struct NewRoundParameters {
     pub number: Number,
+    pub player_number: Number,
+    pub player_score: PlayerScore,
+}
+
+impl Eq for Round {}
+
+impl PartialEq for Round {
+    fn eq(&self, other: &Self) -> bool {
+        self.number == other.number && self.player_number == other.player_number
+    }
+}
+
+impl PartialOrd for Round {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Round {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.number.cmp(&other.number) {
+            Ordering::Equal => {}
+            ord => return ord,
+        }
+        self.player_number.cmp(&other.player_number)
+    }
 }
 
 impl Round {
-    pub fn id(&self) -> Uuid {
+    pub fn id(&self) -> Option<Uuid> {
         self.id
     }
 
-    pub fn load(parameters: LoadRoundParameters) -> Self {
+    pub fn load(parameters: LoadRoundParameters) -> Result<Self, Error> {
         let LoadRoundParameters {
             id,
             player_number,
@@ -28,12 +59,27 @@ impl Round {
             number,
         } = parameters;
 
-        Self {
-            id,
+        Ok(Self {
+            id: Some(id),
             player_number,
             player_score,
             number,
-        }
+        })
+    }
+
+    pub fn new(parameters: NewRoundParameters) -> Result<Self, Error> {
+        let NewRoundParameters {
+            number,
+            player_number,
+            player_score,
+        } = parameters;
+
+        Ok(Self {
+            id: None,
+            player_number,
+            player_score,
+            number,
+        })
     }
 
     pub fn number(&self) -> Number {

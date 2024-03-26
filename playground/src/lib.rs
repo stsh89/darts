@@ -13,12 +13,12 @@ pub mod referee;
 pub mod spectator;
 
 pub use error::Error;
-pub use game::{Game, LoadGameParameters};
+pub use game::{Game, LoadGameParameters, PlayerStats};
 pub use game_preview::{GamePreview, LoadGamePreviewParameters};
 pub use number::Number;
 pub use player::{NewPlayerParameters, Player};
 pub use player_score::PlayerScore;
 pub use points::Points;
-pub use round::{LoadRoundParameters, Round};
+pub use round::{LoadRoundParameters, NewRoundParameters, Round};
 pub use score::Score;
 pub use score_tracker::{NewScoreTrackerParameters, ScoreTracker};

@@ -1,7 +1,7 @@
 use crate::playground::rpc;
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
-use playground::{Error, Game, GamePreview, Player, PlayerScore, Round};
+use playground::{Error, Game, GamePreview, Number, Player, PlayerScore, PlayerStats, Round};
 use prost_types::Timestamp;
 use std::{collections::HashMap, time::SystemTime};
 use tonic::Status;
@@ -26,19 +26,32 @@ impl ToRpc<rpc::Game> for GamePreview {
 
 impl ToRpc<rpc::GameDetails> for Game {
     fn to_rpc(self) -> rpc::GameDetails {
-        let score_tracker = self.score_tracker();
-        let player = score_tracker.player();
+        // let score_tracker = self.score_tracker();
+        let round = self.round_preview();
 
         rpc::GameDetails {
             game_id: self.id().unwrap().to_string(),
-            winner: score_tracker
+            winner: self
                 .winner()
-                .map(|player| format!("Player{}", player.number()))
+                .map(|number| format!("Player{}", number))
                 .unwrap_or_default(),
-            player: format!("Player{}", player.number()),
-            player_points_to_win: player.points_to_win().into(),
+            player: format!(
+                "Player{}",
+                round
+                    .as_ref()
+                    .map(|r| r.player_number)
+                    .unwrap_or(Number::one())
+            ),
+            player_points_to_win: round
+                .map(|r| r.points_to_win)
+                .unwrap_or(Number::one())
+                .into(),
             rounds: rounds(&self),
-            player_details: score_tracker.players().iter().map(ToRpc::to_rpc).collect(),
+            player_details: self
+                .players_stats()
+                .into_iter()
+                .map(ToRpc::to_rpc)
+                .collect(),
         }
     }
 }
@@ -47,6 +60,15 @@ impl ToRpc<rpc::PlayerDetails> for &Player {
     fn to_rpc(self) -> rpc::PlayerDetails {
         rpc::PlayerDetails {
             name: format!("Player{}", self.number()),
+            points_to_win: self.points_to_win().into(),
+        }
+    }
+}
+
+impl ToRpc<rpc::PlayerDetails> for PlayerStats {
+    fn to_rpc(self) -> rpc::PlayerDetails {
+        rpc::PlayerDetails {
+            name: format!("Player{}", self.player_number()),
             points_to_win: self.points_to_win().into(),
         }
     }

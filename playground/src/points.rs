@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::Add};
+use std::{fmt::Display, iter::Sum, ops::Add};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
 pub struct Points(u16);
@@ -35,6 +35,12 @@ impl From<Points> for i32 {
     }
 }
 
+impl Sum for Points {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Self::zero(), Add::add)
+    }
+}
+
 impl Points {
     pub fn new(value: u16) -> Self {
         Self(value)
@@ -46,5 +52,13 @@ impl Points {
 
     pub fn zero() -> Self {
         Self(0)
+    }
+
+    pub fn sum(&mut self, other: &Self) {
+        self.0 += other.0
+    }
+
+    pub fn value(&self) -> u16 {
+        self.0
     }
 }

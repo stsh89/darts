@@ -70,10 +70,6 @@ impl Player {
         self.scores.last()
     }
 
-    pub fn round_number(&self) -> usize {
-        self.scores.len()
-    }
-
     fn is_overthrow(&self, score: Score) -> bool {
         let total = self.points + score.points();
 

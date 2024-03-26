@@ -1,12 +1,18 @@
 use crate::Error;
 use std::{fmt::Display, num::NonZeroUsize};
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, Hash, PartialEq, PartialOrd, Eq, Ord)]
 pub struct Number(NonZeroUsize);
 
 impl Display for Number {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+impl From<Number> for i32 {
+    fn from(value: Number) -> Self {
+        value.0.get() as i32
     }
 }
 
@@ -29,5 +35,9 @@ impl Number {
 
     pub fn value(&self) -> usize {
         self.0.get()
+    }
+
+    pub fn increment(&mut self) {
+        self.0 = self.0.saturating_add(1);
     }
 }

@@ -1,7 +1,7 @@
 use crate::{
     games::{FindGame, InsertGame, ListGames},
-    scores::{DeleteScore, InsertScore, ListScores},
-    GameRow, InsertScoreParameters, ScoreRow,
+    scores::ListScores,
+    GameRow, ScoreRow,
 };
 use playground::{
     referee, spectator, Error, Game, GamePreview, LoadGameParameters, LoadGamePreviewParameters,
@@ -34,18 +34,6 @@ impl referee::GetGame for Repo {
     }
 }
 
-impl referee::DeleteScore for Repo {
-    async fn delete_score(&self, id: Uuid) -> Result<(), Error> {
-        self.conn()
-            .await?
-            .delete_score(id)
-            .await
-            .map_err(|err| Error::Repo(err.into()))?;
-
-        Ok(())
-    }
-}
-
 impl referee::SaveGame for Repo {
     async fn save_game(&self, game: &mut Game) -> Result<(), Error> {
         if game.is_persisted() {
@@ -63,38 +51,6 @@ impl referee::SaveGame for Repo {
         game.set_start_time(game_row.insert_time);
 
         Ok(())
-    }
-}
-
-impl referee::InsertScore for Repo {
-    async fn insert_score(
-        &self,
-        parameters: referee::InsertScoreParameters,
-    ) -> Result<Round, Error> {
-        let referee::InsertScoreParameters {
-            game_id,
-            player_number,
-            player_score,
-            round_number,
-        } = parameters;
-
-        let points: Points = player_score.into();
-
-        let score_details = self
-            .conn()
-            .await?
-            .insert_score(InsertScoreParameters {
-                game_id,
-                player_number,
-                points_kind: points.kind,
-                points_number: points.number,
-                round_number: round_number.into(),
-            })
-            .await
-            .map_err(|err| Error::Repo(err.into()))?
-            .try_into()?;
-
-        Ok(score_details)
     }
 }
 
@@ -181,12 +137,12 @@ impl TryFrom<ScoreRow> for Round {
                 .map_err(Into::<eyre::Report>::into)?,
         )?;
 
-        Ok(Self::load(LoadRoundParameters {
+        Self::load(LoadRoundParameters {
             id,
             player_number,
             player_score,
             number,
-        }))
+        })
     }
 }
 
