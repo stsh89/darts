@@ -2,7 +2,7 @@ use crate::{Error, Points};
 
 const POINTS_LIMIT: u16 = 180;
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy)]
 pub struct Score(Points);
 
 impl Score {
@@ -19,7 +19,7 @@ impl Score {
     }
 
     pub fn new(points: u16) -> Result<Self, Error> {
-        let mut score = Score::default();
+        let mut score = Score(Points::zero());
 
         score.assign_points(Points::new(points))?;
 
@@ -43,14 +43,14 @@ mod tests {
     }
 
     #[test]
-    fn test_new_score_with_points_limit() {
+    fn test_new_score_with_limit() {
         let score = Score::new(POINTS_LIMIT);
 
         assert!(score.is_ok());
     }
 
     #[test]
-    fn test_new_score_from_u16_over_limit() {
+    fn test_new_score_over_limit() {
         let result = Score::new(POINTS_LIMIT + 1);
 
         assert!(result.is_err());
