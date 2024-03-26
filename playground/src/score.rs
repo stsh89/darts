@@ -1,8 +1,10 @@
 use crate::{Error, Points};
 
+/// Player can not score more than 180 points at a time.
+/// Maximum points per one dart is 60.
+/// Player throws 3 darts per one round which is equal to 180 points.
 const POINTS_LIMIT: u16 = 180;
 
-// #[derive(Clone, Copy)]
 pub struct Score(Points);
 
 impl Score {
