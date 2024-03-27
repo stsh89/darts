@@ -1,14 +1,12 @@
-WITH game(id) AS (
-    INSERT INTO playground.games DEFAULT VALUES RETURNING id
+INSERT INTO playground.games (
+    players_number, points_limit, rounds, start_time
+) VALUES (
+    2,
+    301,
+    '[
+        {"points": 17, "points_kind": "regular", "round_number": 1, "player_number": 1},
+        {"points": 24, "points_kind": "regular", "round_number": 1, "player_number": 2},
+        {"points": 27, "points_kind": "regular", "round_number": 2, "player_number": 1}
+    ]'::jsonb,
+    NOW()
 )
-INSERT INTO playground.scores (game_id, player_number, points_kind, points_number, round_number)
-SELECT game.id, T.player_number, T.points_kind, T.points_number, T.round_number
-FROM game
-LEFT JOIN (
-    SELECT player_number, points_kind, points_number, round_number FROM UNNEST(
-        array[1, 2, 1, 2],
-        array['score', 'score', 'score', 'score'],
-        array[17, 55, 34, 66],
-        array[1,1,2,2]
-    ) AS VALUES(player_number, points_kind, points_number, round_number)
-) T ON TRUE;

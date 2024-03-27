@@ -1,6 +1,6 @@
 use crate::helpers;
 use dataspine::Repo;
-use playground::referee::GetGame;
+use playground::coordinator::GetGame;
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -16,7 +16,7 @@ async fn it_gets_game(pool: PgPool) -> anyhow::Result<()> {
 }
 
 #[sqlx::test(fixtures("games"))]
-async fn it_does_not_get_game_state(pool: PgPool) -> anyhow::Result<()> {
+async fn it_does_not_get_game(pool: PgPool) -> anyhow::Result<()> {
     let result = Repo::new(pool).get_game(Uuid::nil()).await;
 
     assert!(result.is_err());
