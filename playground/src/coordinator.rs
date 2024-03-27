@@ -1,4 +1,4 @@
-use crate::{Error, Game, NewGameParameters, Number, PlayerScore, Points, Score};
+use crate::{Error, Game, NewGameParameters, Number, Points, Score};
 use uuid::Uuid;
 
 pub trait GetGame {
@@ -6,23 +6,28 @@ pub trait GetGame {
     async fn get_game(&self, game_id: Uuid) -> Result<Game, Error>;
 }
 
+pub trait InsertGame {
+    #[allow(async_fn_in_trait)]
+    async fn insert_game(&self, game: &Game) -> Result<Uuid, Error>;
+}
+
 pub trait ListGames {
     #[allow(async_fn_in_trait)]
     async fn list_games(&self) -> Result<Vec<Game>, Error>;
 }
 
-pub trait SaveGame {
+pub trait UpdateGame {
     #[allow(async_fn_in_trait)]
-    async fn save_game(&self, game: &Game) -> Result<Uuid, Error>;
+    async fn update_game(&self, game: &Game) -> Result<(), Error>;
 }
 
 pub struct CountScoreParameters<'a, G>
 where
-    G: GetGame + SaveGame,
+    G: GetGame + UpdateGame,
 {
     pub game_id: Uuid,
-    pub score: Score,
     pub games: &'a G,
+    pub score: Score,
 }
 
 pub struct GetGameParameters<'a, G>
@@ -33,6 +38,15 @@ where
     pub games: &'a G,
 }
 
+pub struct InitializeGameParameters<'a, G>
+where
+    G: InsertGame,
+{
+    pub games: &'a G,
+    pub players_number: Number,
+    pub points_limit: Points,
+}
+
 pub struct ListGamesParameters<'a, G>
 where
     G: ListGames,
@@ -40,25 +54,9 @@ where
     pub games: &'a G,
 }
 
-pub struct SaveGameParameters {
-    pub game_id: Uuid,
-    pub player_number: i32,
-    pub player_score: PlayerScore,
-    pub round_number: u8,
-}
-
-pub struct StartGameParameters<'a, G>
-where
-    G: SaveGame,
-{
-    pub games: &'a G,
-    pub players_number: Number,
-    pub points_limit: Points,
-}
-
 pub async fn count_score<G>(parameters: CountScoreParameters<'_, G>) -> Result<Game, Error>
 where
-    G: GetGame + SaveGame,
+    G: GetGame + UpdateGame,
 {
     let CountScoreParameters {
         game_id,
@@ -69,7 +67,28 @@ where
     let mut game = games.get_game(game_id).await?;
 
     game.count_score(score)?;
-    games.save_game(&game).await?;
+    games.update_game(&game).await?;
+
+    Ok(game)
+}
+
+pub async fn initialize_game<G>(parameters: InitializeGameParameters<'_, G>) -> Result<Game, Error>
+where
+    G: InsertGame,
+{
+    let InitializeGameParameters {
+        games,
+        players_number,
+        points_limit,
+    } = parameters;
+
+    let mut game = Game::new(NewGameParameters {
+        players_number,
+        points_limit,
+    })?;
+
+    let id = games.insert_game(&game).await?;
+    game.assign_id(id);
 
     Ok(game)
 }
@@ -92,25 +111,4 @@ where
     let games = parameters.games.list_games().await?;
 
     Ok(games)
-}
-
-pub async fn start_game<G>(parameters: StartGameParameters<'_, G>) -> Result<Game, Error>
-where
-    G: SaveGame,
-{
-    let StartGameParameters {
-        games,
-        players_number,
-        points_limit,
-    } = parameters;
-
-    let mut game = Game::new(NewGameParameters {
-        players_number,
-        points_limit,
-    })?;
-
-    let id = games.save_game(&game).await?;
-    game.assign_id(id);
-
-    Ok(game)
 }

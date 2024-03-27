@@ -1,7 +1,7 @@
 use clap::Parser;
 use dataspine::Repo;
 use playground::{
-    coordinator::{self, CountScoreParameters, StartGameParameters},
+    coordinator::{self, CountScoreParameters, InitializeGameParameters},
     InProgressState, NotStartedState, Number, Points, Score, State,
 };
 use std::io;
@@ -17,7 +17,7 @@ async fn main() -> anyhow::Result<()> {
     let Args { database_url } = Args::parse();
     let repo = Repo::from_database_url(&database_url).await?;
 
-    let mut game = coordinator::start_game(StartGameParameters {
+    let mut game = coordinator::initialize_game(InitializeGameParameters {
         games: &repo,
         players_number: Number::new(1)?,
         points_limit: Points::new(101),

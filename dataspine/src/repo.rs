@@ -1,12 +1,12 @@
 use crate::{
     games::{FindGame, InsertGame, ListGames, RoundsColumn, UpdateGame},
-    GameRow, NewGameRow,
+    GameRow,
 };
 use playground::{
     coordinator, Error, Game, LoadGameParameters, NewRoundParameters, Number, PlayerScore, Points,
     Round, Score,
 };
-use sqlx::{pool::PoolConnection, postgres::PgPoolOptions, types::Json, PgPool, Postgres};
+use sqlx::{pool::PoolConnection, postgres::PgPoolOptions, PgPool, Postgres};
 use uuid::Uuid;
 
 const POINTS_KIND_REGULAR: &str = "regular";
@@ -27,16 +27,9 @@ impl coordinator::GetGame for Repo {
     }
 }
 
-impl coordinator::SaveGame for Repo {
-    async fn save_game(&self, game: &Game) -> Result<Uuid, Error> {
-        let mut conn = self.conn().await?;
-
-        if let Some(id) = game.id() {
-            conn.update_game(game).await?;
-            return Ok(id);
-        }
-
-        conn.insert_game(game).await
+impl coordinator::InsertGame for Repo {
+    async fn insert_game(&self, game: &Game) -> Result<Uuid, Error> {
+        self.conn().await?.insert_game(game).await
     }
 }
 
@@ -46,13 +39,18 @@ impl coordinator::ListGames for Repo {
             .conn()
             .await?
             .list_games()
-            .await
-            .map_err(eyre::Report::new)?
+            .await?
             .into_iter()
             .map(TryInto::try_into)
             .collect::<Result<Vec<Game>, Error>>()?;
 
         Ok(games)
+    }
+}
+
+impl coordinator::UpdateGame for Repo {
+    async fn update_game(&self, game: &Game) -> Result<(), Error> {
+        self.conn().await?.update_game(game).await
     }
 }
 
@@ -69,7 +67,7 @@ impl Repo {
             .await
             .map_err(eyre::Report::new)?;
 
-        Ok(Self { pool })
+        Ok(Self::new(pool))
     }
 
     pub fn new(pool: PgPool) -> Self {
@@ -92,13 +90,14 @@ impl TryFrom<GameRow> for Game {
 
         let players_number = players_number.try_into().map_err(eyre::Report::new)?;
         let points_limit = points_limit.try_into().map_err(eyre::Report::new)?;
+        let rounds = rounds
+            .iter()
+            .map(TryInto::<Round>::try_into)
+            .collect::<Result<Vec<Round>, Error>>()?;
 
         Game::load(LoadGameParameters {
             id,
-            rounds: rounds
-                .iter()
-                .map(TryInto::<Round>::try_into)
-                .collect::<Result<Vec<Round>, Error>>()?,
+            rounds,
             end_time,
             start_time,
             players_number: Number::new(players_number)?,
@@ -144,20 +143,6 @@ fn player_score(points: i32, points_kind: String) -> Result<PlayerScore, Error> 
     Err(Error::Unexpected(eyre::eyre!("Invalid points kind")))
 }
 
-impl From<&Game> for NewGameRow {
-    fn from(value: &Game) -> Self {
-        let rounds: Vec<RoundsColumn> = value.rounds().iter().map(Into::into).collect();
-
-        Self {
-            start_time: value.start_time(),
-            end_time: value.end_time(),
-            points_limit: value.points_limit().value().into(),
-            players_number: value.players_number().value() as i32,
-            rounds: Json::from(rounds),
-        }
-    }
-}
-
 impl From<&Game> for GameRow {
     fn from(value: &Game) -> Self {
         let rounds: Vec<RoundsColumn> = value.rounds().iter().map(Into::into).collect();
@@ -167,22 +152,24 @@ impl From<&Game> for GameRow {
             end_time: value.end_time(),
             points_limit: value.points_limit().value().into(),
             players_number: value.players_number().value() as i32,
-            rounds: Json::from(rounds),
-            id: value.id().unwrap(),
+            rounds: rounds.into(),
+            id: value.id().unwrap_or_else(Uuid::nil),
         }
     }
 }
 
 impl From<&Round> for RoundsColumn {
     fn from(value: &Round) -> Self {
+        let (points_kind, points) = match value.player_score() {
+            PlayerScore::Regular(score) => (POINTS_KIND_REGULAR, score.points().value().into()),
+            PlayerScore::Overthrow(score) => (POINTS_KIND_OVERTHROW, score.points().value().into()),
+        };
+
         Self {
             round_number: value.number().value() as i32,
             player_number: value.player_number().value() as i32,
-            points_kind: match value.player_score() {
-                PlayerScore::Regular(_) => POINTS_KIND_REGULAR.to_string(),
-                PlayerScore::Overthrow(_) => POINTS_KIND_OVERTHROW.to_string(),
-            },
-            points: value.player_score().points().value() as i32,
+            points_kind: points_kind.into(),
+            points,
         }
     }
 }

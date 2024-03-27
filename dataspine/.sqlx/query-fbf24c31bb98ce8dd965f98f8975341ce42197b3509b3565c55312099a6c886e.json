@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\nINSERT INTO playground.games\n    (players_number, points_limit, rounds, start_time, end_time)\nVALUES ($1, $2, $3, $4, $5)\nRETURNING id",
+  "query": "INSERT INTO playground.games (\n    end_time,\n    players_number,\n    points_limit,\n    rounds,\n    start_time\n) VALUES ($1, $2, $3, $4, $5)\nRETURNING id\n",
   "describe": {
     "columns": [
       {
@@ -11,10 +11,10 @@
     ],
     "parameters": {
       "Left": [
+        "Timestamptz",
         "Int4",
         "Int4",
         "Jsonb",
-        "Timestamptz",
         "Timestamptz"
       ]
     },
@@ -22,5 +22,5 @@
       false
     ]
   },
-  "hash": "55fab18cc77a133e62457ed332c159ff854f185e6d44bd45f107a1de03dbb10f"
+  "hash": "fbf24c31bb98ce8dd965f98f8975341ce42197b3509b3565c55312099a6c886e"
 }

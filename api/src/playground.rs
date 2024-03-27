@@ -45,7 +45,7 @@ impl rpc::games_server::Games for Server {
         &self,
         _request: Request<rpc::CreateGameRequest>,
     ) -> Result<Response<rpc::Game>, Status> {
-        let game = coordinator::start_game(coordinator::StartGameParameters {
+        let game = coordinator::initialize_game(coordinator::InitializeGameParameters {
             players_number: Number::new(2).unwrap(),
             points_limit: Points::new(301),
             games: &self.repo,

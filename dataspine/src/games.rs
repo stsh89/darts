@@ -30,14 +30,6 @@ pub struct GameRow {
     pub rounds: Json<Vec<RoundsColumn>>,
 }
 
-pub struct NewGameRow {
-    pub start_time: Option<DateTime<Utc>>,
-    pub end_time: Option<DateTime<Utc>>,
-    pub points_limit: i32,
-    pub players_number: i32,
-    pub rounds: Json<Vec<RoundsColumn>>,
-}
-
 #[derive(Deserialize, Serialize, Clone)]
 pub struct RoundsColumn {
     pub round_number: i32,
@@ -45,15 +37,3 @@ pub struct RoundsColumn {
     pub points_kind: String,
     pub points: i32,
 }
-
-// impl From<JsonValue> for RoundColumn {
-//     fn from(json: JsonValue) -> Self {
-//         let json = json.as_object().unwrap();
-//         Self {
-//             round_number: json["round_number"].as_i64().unwrap() as i32,
-//             player_number: json["player_number"].as_i64().unwrap() as i32,
-//             points_kind: json["points_kind"].as_str().unwrap().to_string(),
-//             points: json["points"].as_i64().unwrap() as i32,
-//         }
-//     }
-// }

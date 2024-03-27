@@ -103,7 +103,9 @@ fn rounds(game: &Game) -> Vec<rpc::Round> {
 
     let mut rounds: Vec<(usize, Vec<&Round>)> = groups.into_iter().collect();
     rounds.sort_by_key(|(i, _r)| *i);
-    rounds.iter_mut().for_each(|(_i, r)| r.sort_by_key(|ro| (ro.number(), ro.player_number())));
+    rounds
+        .iter_mut()
+        .for_each(|(_i, r)| r.sort_by_key(|ro| (ro.number(), ro.player_number())));
 
     let rounds: Vec<rpc::Round> = rounds
         .into_iter()

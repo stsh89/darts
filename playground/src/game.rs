@@ -26,22 +26,6 @@ pub struct NewRoundParameters {
     pub player_score: PlayerScore,
 }
 
-impl Round {
-    pub fn new(parameters: NewRoundParameters) -> Self {
-        let NewRoundParameters {
-            number,
-            player_number,
-            player_score,
-        } = parameters;
-
-        Self {
-            number,
-            player_number,
-            player_score,
-        }
-    }
-}
-
 pub struct LoadGameParameters {
     pub id: Uuid,
     pub rounds: Vec<Round>,
@@ -209,7 +193,10 @@ impl Game {
             .build()?;
 
         for round in rounds {
-            game.count_score(Score::new(round.player_score().points().value())?)?;
+            let points = round.player_score().score().points();
+            let score = Score::new(points.value())?;
+
+            game.count_score(score)?;
         }
 
         Ok(game)
@@ -385,6 +372,20 @@ impl Ord for Round {
 }
 
 impl Round {
+    pub fn new(parameters: NewRoundParameters) -> Self {
+        let NewRoundParameters {
+            number,
+            player_number,
+            player_score,
+        } = parameters;
+
+        Self {
+            number,
+            player_number,
+            player_score,
+        }
+    }
+
     pub fn number(&self) -> Number {
         self.number
     }
