@@ -14,18 +14,20 @@ impl PlayerScore {
         PlayerScore::Overthrow(score)
     }
 
-    pub fn score(&self) -> &Score {
-        match self {
-            PlayerScore::Regular(score) => score,
-            PlayerScore::Overthrow(score) => score,
-        }
-    }
-
     pub fn game_points(&self) -> Points {
         match self {
             PlayerScore::Regular(score) => score.points(),
             PlayerScore::Overthrow(_) => Points::zero(),
         }
+    }
+
+    pub fn points(&self) -> Points {
+        let score = match self {
+            PlayerScore::Regular(score) => score,
+            PlayerScore::Overthrow(score) => score,
+        };
+
+        score.points()
     }
 
     pub fn is_regular(&self) -> bool {

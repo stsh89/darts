@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nUPDATE playground.games\nSET players_number = $2, points_limit = $3, rounds = $4, start_time = $5, end_time = $6, update_time = default\nWHERE id = $1\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Int4",
+        "Jsonb",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "daa16951a6cbfda8161f8e3bf7f04a84f7dfd760c1aa0a71c2b75e6664bd5821"
+}

@@ -1,138 +1,102 @@
-use sqlx::PgConnection;
+use crate::{FindGame, GameRow, InsertGame, ListGames, NewGameRow, RoundsColumn, UpdateGame};
+use playground::{Error, Game};
+use sqlx::{types::Json, PgConnection};
 use uuid::Uuid;
 
-use crate::{
-    games::ListGames, scores::ListScores, DeleteScore, EmptyResult, FindGame, GameRow, InsertGame,
-    InsertScore, InsertScoreParameters, MaybeRowResult, RowResult, RowsResult, ScoreRow,
-};
-
-impl DeleteScore for PgConnection {
-    async fn delete_score(&mut self, id: Uuid) -> EmptyResult {
-        delete_score(self, id).await
-    }
-}
-
 impl FindGame for PgConnection {
-    async fn find_game(&mut self, id: Uuid) -> MaybeRowResult<GameRow> {
-        find_game(self, id).await
+    async fn find_game(&mut self, id: Uuid) -> Result<Option<GameRow>, Error> {
+        let row = sqlx::query_as!(
+            GameRow,
+            r#"
+SELECT
+    id,
+    players_number,
+    points_limit,
+    rounds as "rounds!: Json<Vec<RoundsColumn>>",
+    start_time,
+    end_time
+FROM playground.games
+WHERE id = $1
+            "#,
+            id,
+        )
+        .fetch_optional(self)
+        .await
+        .map_err(eyre::Report::new)?;
+
+        Ok(row)
     }
 }
 
 impl InsertGame for PgConnection {
-    async fn insert_game(&mut self) -> RowResult<GameRow> {
-        insert_game(self).await
-    }
-}
+    async fn insert_game(&mut self, game: &Game) -> Result<Uuid, Error> {
+        let row = NewGameRow::from(game);
 
-impl InsertScore for PgConnection {
-    async fn insert_score(&mut self, parameters: InsertScoreParameters) -> RowResult<ScoreRow> {
-        insert_score(self, parameters).await
+        let id = sqlx::query_scalar!(
+            r#"
+INSERT INTO playground.games
+    (players_number, points_limit, rounds, start_time, end_time)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id"#,
+            row.players_number,
+            row.points_limit,
+            row.rounds as _,
+            row.start_time,
+            row.end_time
+        )
+        .fetch_one(self)
+        .await
+        .map_err(eyre::Report::new)?;
+
+        Ok(id)
     }
 }
 
 impl ListGames for PgConnection {
-    async fn list_games(&mut self) -> RowsResult<GameRow> {
-        list_games(self).await
+    async fn list_games(&mut self) -> Result<Vec<GameRow>, Error> {
+        let rows = sqlx::query_as!(
+            GameRow,
+            r#"
+        SELECT
+            id,
+            players_number,
+            points_limit,
+            rounds as "rounds!: Json<Vec<RoundsColumn>>",
+            start_time,
+            end_time
+        FROM playground.games
+        ORDER BY insert_time DESC LIMIT 10
+            "#
+        )
+        .fetch_all(self)
+        .await
+        .map_err(eyre::Report::new)?;
+
+        Ok(rows)
     }
 }
 
-impl ListScores for PgConnection {
-    async fn list_scores(&mut self, game_id: Uuid) -> RowsResult<ScoreRow> {
-        list_scores(self, game_id).await
+impl UpdateGame for PgConnection {
+    async fn update_game(&mut self, game: &Game) -> Result<(), Error> {
+        let row = GameRow::from(game);
+
+        sqlx::query!(
+            r#"
+UPDATE playground.games
+SET players_number = $2, points_limit = $3, rounds = $4, start_time = $5, end_time = $6, update_time = default
+WHERE id = $1
+"#,
+            row.id,
+            row.players_number,
+            row.points_limit,
+            row.rounds as _,
+            row.start_time,
+            row.end_time
+        )
+        .execute(self)
+        .await
+        .map_err(eyre::Report::new)?;
+
+        Ok(())
     }
-}
-
-async fn delete_score(conn: &mut PgConnection, id: Uuid) -> EmptyResult {
-    sqlx::query!(r#"DELETE FROM playground.scores WHERE id = $1"#, id)
-        .execute(conn)
-        .await?;
-
-    Ok(())
-}
-
-async fn find_game(conn: &mut PgConnection, id: Uuid) -> MaybeRowResult<GameRow> {
-    let row = sqlx::query_as!(
-        GameRow,
-        r#"SELECT id, insert_time FROM playground.games WHERE id = $1"#,
-        id,
-    )
-    .fetch_optional(conn)
-    .await?;
-
-    Ok(row)
-}
-
-async fn insert_game(conn: &mut PgConnection) -> RowResult<GameRow> {
-    let row = sqlx::query_as!(
-        GameRow,
-        r#"INSERT INTO playground.games DEFAULT VALUES RETURNING id, insert_time"#
-    )
-    .fetch_one(conn)
-    .await?;
-
-    Ok(row)
-}
-
-async fn insert_score(
-    conn: &mut PgConnection,
-    parameters: InsertScoreParameters,
-) -> RowResult<ScoreRow> {
-    let InsertScoreParameters {
-        game_id,
-        player_number,
-        points_kind,
-        points_number,
-        round_number,
-    } = parameters;
-
-    let row = sqlx::query_as!(
-        ScoreRow,
-        r#"
-INSERT INTO playground.scores (
-    game_id,
-    player_number,
-    points_kind,
-    points_number,
-    round_number
-) VALUES (
-    $1, $2, $3, $4, $5
-) RETURNING id, game_id, player_number, points_kind, points_number, round_number, insert_time
-        "#,
-        game_id,
-        player_number,
-        points_kind,
-        points_number,
-        round_number
-    )
-    .fetch_one(conn)
-    .await?;
-
-    Ok(row)
-}
-
-async fn list_games(conn: &mut PgConnection) -> RowsResult<GameRow> {
-    let rows = sqlx::query_as!(
-        GameRow,
-        r#"SELECT id, insert_time FROM playground.games ORDER BY insert_time DESC LIMIT 10"#
-    )
-    .fetch_all(conn)
-    .await?;
-
-    Ok(rows)
-}
-
-async fn list_scores(conn: &mut PgConnection, game_id: Uuid) -> RowsResult<ScoreRow> {
-    let rows = sqlx::query_as!(
-        ScoreRow,
-        r#"
-SELECT id, game_id, player_number, points_kind, points_number, round_number, insert_time
-FROM playground.scores
-WHERE game_id = $1
-ORDER BY round_number, player_number"#,
-        game_id
-    )
-    .fetch_all(conn)
-    .await?;
-
-    Ok(rows)
 }

@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nINSERT INTO playground.games\n    (players_number, points_limit, rounds, start_time, end_time)\nVALUES ($1, $2, $3, $4, $5)\nRETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Jsonb",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "55fab18cc77a133e62457ed332c159ff854f185e6d44bd45f107a1de03dbb10f"
+}

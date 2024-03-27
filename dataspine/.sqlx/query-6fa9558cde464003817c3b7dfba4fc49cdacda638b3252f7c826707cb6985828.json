@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            id,\n            players_number,\n            points_limit,\n            rounds as \"rounds!: Json<Vec<RoundsColumn>>\",\n            start_time,\n            end_time\n        FROM playground.games\n        ORDER BY insert_time DESC LIMIT 10\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "players_number",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "points_limit",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "rounds!: Json<Vec<RoundsColumn>>",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 4,
+        "name": "start_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "end_time",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "6fa9558cde464003817c3b7dfba4fc49cdacda638b3252f7c826707cb6985828"
+}

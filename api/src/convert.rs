@@ -1,9 +1,7 @@
 use crate::playground::rpc;
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
-use playground::{
-    Error, Game, GamePreview, Number, Player, PlayerScore, PlayerStats, Points, Round,
-};
+use playground::{Error, Game, PlayerScore, Round, State};
 use prost_types::Timestamp;
 use std::{collections::HashMap, time::SystemTime};
 use tonic::Status;
@@ -17,19 +15,30 @@ pub trait TryConvert<T> {
     fn try_convert(self) -> Result<T, Status>;
 }
 
-impl ToRpc<rpc::Game> for GamePreview {
+impl ToRpc<rpc::Game> for Game {
     fn to_rpc(self) -> rpc::Game {
         rpc::Game {
-            id: self.game_id().to_string(),
-            start_time: Some(self.start_time().to_rpc()),
+            id: self.id().unwrap().to_string(),
+            start_time: self.start_time().map(ToRpc::to_rpc),
         }
     }
 }
 
 impl ToRpc<rpc::GameDetails> for Game {
     fn to_rpc(self) -> rpc::GameDetails {
-        // let score_tracker = self.score_tracker();
-        let round = self.round_preview();
+        let state = self.state();
+
+        let (player, player_points_to_win) = match state {
+            State::NotStarted(state) => (
+                format!("Player{}", state.player_number()),
+                state.points_to_win().value().into(),
+            ),
+            State::InProgress(state) => (
+                format!("Player{}", state.player_number()),
+                state.points_to_win().value().into(),
+            ),
+            State::Finished(_) => ("".to_string(), 0),
+        };
 
         rpc::GameDetails {
             game_id: self.id().unwrap().to_string(),
@@ -37,41 +46,10 @@ impl ToRpc<rpc::GameDetails> for Game {
                 .winner()
                 .map(|number| format!("Player{}", number))
                 .unwrap_or_default(),
-            player: format!(
-                "Player{}",
-                round
-                    .as_ref()
-                    .map(|r| r.player_number())
-                    .unwrap_or(Number::one())
-            ),
-            player_points_to_win: round
-                .map(|r| r.points_to_win())
-                .unwrap_or(Points::zero())
-                .into(),
+            player,
+            player_points_to_win,
             rounds: rounds(&self),
-            player_details: self
-                .players_stats()
-                .into_iter()
-                .map(ToRpc::to_rpc)
-                .collect(),
-        }
-    }
-}
-
-impl ToRpc<rpc::PlayerDetails> for &Player {
-    fn to_rpc(self) -> rpc::PlayerDetails {
-        rpc::PlayerDetails {
-            name: format!("Player{}", self.number()),
-            points_to_win: self.points_to_win().into(),
-        }
-    }
-}
-
-impl ToRpc<rpc::PlayerDetails> for PlayerStats {
-    fn to_rpc(self) -> rpc::PlayerDetails {
-        rpc::PlayerDetails {
-            name: format!("Player{}", self.player_number()),
-            points_to_win: self.points_to_win().into(),
+            player_details: player_details(&self),
         }
     }
 }
@@ -81,24 +59,15 @@ impl ToRpc<rpc::Point> for &PlayerScore {
         match self {
             PlayerScore::Regular(score) => rpc::Point {
                 kind: rpc::PointKind::Score.into(),
-                value: score.points().into(),
+                value: score.points().value().into(),
             },
             PlayerScore::Overthrow(score) => rpc::Point {
                 kind: rpc::PointKind::Overthrow.into(),
-                value: score.points().into(),
+                value: score.points().value().into(),
             },
         }
     }
 }
-
-// impl ToRpc<rpc::Round> for Round {
-//     fn to_rpc(self) -> rpc::Round {
-//         rpc::Round {
-//             number: self.number,
-//             points: self,
-//         }
-//     }
-// }
 
 impl ToRpc<Status> for Error {
     fn to_rpc(self) -> Status {
@@ -125,15 +94,20 @@ impl TryConvert<Uuid> for String {
     }
 }
 
-pub fn rounds(game_state: &Game) -> Vec<rpc::Round> {
-    let groups: HashMap<usize, Vec<&Round>> = game_state
+fn rounds(game: &Game) -> Vec<rpc::Round> {
+    let groups: HashMap<usize, Vec<&Round>> = game
         .rounds()
         .iter()
         .into_grouping_map_by(|r| r.number().value())
         .collect();
 
-    let mut rounds: Vec<rpc::Round> = groups
+    let mut rounds: Vec<(usize, Vec<&Round>)> = groups.into_iter().collect();
+    rounds.sort_by_key(|(i, _r)| *i);
+    rounds.iter_mut().for_each(|(_i, r)| r.sort_by_key(|ro| (ro.number(), ro.player_number())));
+
+    let rounds: Vec<rpc::Round> = rounds
         .into_iter()
+        .rev()
         .map(|(number, round)| rpc::Round {
             number: number.try_into().unwrap(),
             points: round
@@ -143,28 +117,37 @@ pub fn rounds(game_state: &Game) -> Vec<rpc::Round> {
         })
         .collect();
 
-    rounds.sort_by(|a, b| b.number.cmp(&a.number));
     rounds
+}
 
-    // let players_number = 2;
+fn player_details(game: &Game) -> Vec<rpc::PlayerDetails> {
+    let groups: HashMap<usize, Vec<&Round>> = game
+        .rounds()
+        .iter()
+        .into_grouping_map_by(|r| r.player_number().value())
+        .collect();
 
-    // //TODO: calculate capacity in a more efficient way.
-    // let mut rounds = Vec::with_capacity(50);
-    // let mut round_number = 1;
+    let mut player_details: Vec<rpc::PlayerDetails> = Vec::with_capacity(groups.len());
 
-    // for chunk in game_state.rounds().chunks(players_number) {
-    //     let mut round = rpc::Round {
-    //         number: round_number,
-    //         points: Vec::with_capacity(players_number),
-    //     };
+    for i in 0..game.players_number().value() {
+        player_details.push(rpc::PlayerDetails {
+            points_to_win: game.points_limit().value().into(),
+            name: format!("Player{}", i + 1),
+        });
+    }
 
-    //     for data in chunk {
-    //         round.points.push(data.player_score().to_rpc());
-    //     }
+    for (player_number, rounds) in groups {
+        if let Some(details) = player_details.get_mut(player_number - 1) {
+            for round in rounds {
+                details.points_to_win = match round.player_score() {
+                    PlayerScore::Regular(score) => {
+                        details.points_to_win - (score.points().value() as i32)
+                    }
+                    PlayerScore::Overthrow(_) => details.points_to_win,
+                }
+            }
+        }
+    }
 
-    //     rounds.push(round);
-    //     round_number += 1;
-    // }
-
-    // rounds
+    player_details
 }

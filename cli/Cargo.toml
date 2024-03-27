@@ -8,3 +8,6 @@ edition = "2021"
 [dependencies]
 playground = { workspace = true }
 anyhow = { workspace = true }
+tokio = { workspace = true }
+clap = { workspace = true }
+dataspine = { workspace = true }

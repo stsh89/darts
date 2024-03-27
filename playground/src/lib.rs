@@ -1,22 +1,18 @@
 mod error;
 mod game;
-mod game_preview;
 mod number;
-mod player;
 mod player_score;
 mod points;
-mod round;
 mod score;
 
-pub mod referee;
-pub mod spectator;
+pub mod coordinator;
 
 pub use error::Error;
-pub use game::{Game, LoadGameParameters, NewGameParameters, PlayerStats};
-pub use game_preview::{GamePreview, LoadGamePreviewParameters};
+pub use game::{
+    FinishedState, Game, InProgressState, LoadGameParameters, NewGameParameters,
+    NewRoundParameters, NotStartedState, Round, State,
+};
 pub use number::Number;
-pub use player::{NewPlayerParameters, Player};
 pub use player_score::PlayerScore;
 pub use points::Points;
-pub use round::{LoadRoundParameters, NewRoundParameters, Round};
 pub use score::Score;

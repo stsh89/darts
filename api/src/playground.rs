@@ -1,10 +1,6 @@
 use crate::convert::{ToRpc, TryConvert};
 use dataspine::Repo;
-use playground::{
-    self,
-    referee::{self, StartGameParameters},
-    spectator, Score,
-};
+use playground::{self, coordinator, Number, Points, Score};
 use tonic::{Request, Response, Status};
 
 pub mod rpc {
@@ -32,7 +28,7 @@ impl rpc::games_server::Games for Server {
 
         let score = Score::new(points as u16).map_err(ToRpc::to_rpc)?;
 
-        let game_state = referee::count_score(referee::CountScoreParameters {
+        let game_state = coordinator::count_score(coordinator::CountScoreParameters {
             games: &self.repo,
             game_id: game_id.try_convert()?,
             score,
@@ -49,9 +45,13 @@ impl rpc::games_server::Games for Server {
         &self,
         _request: Request<rpc::CreateGameRequest>,
     ) -> Result<Response<rpc::Game>, Status> {
-        let game = referee::start_game(StartGameParameters { games: &self.repo })
-            .await
-            .map_err(ToRpc::to_rpc)?;
+        let game = coordinator::start_game(coordinator::StartGameParameters {
+            players_number: Number::new(2).unwrap(),
+            points_limit: Points::new(301),
+            games: &self.repo,
+        })
+        .await
+        .map_err(ToRpc::to_rpc)?;
 
         Ok(Response::new(rpc::Game {
             id: game.id().unwrap().to_string(),
@@ -65,7 +65,7 @@ impl rpc::games_server::Games for Server {
     ) -> Result<Response<rpc::GameDetails>, Status> {
         let rpc::GetGameDetailsRequest { game_id } = request.into_inner();
 
-        let game = spectator::get_game(spectator::GetGameParameters {
+        let game = coordinator::get_game(coordinator::GetGameParameters {
             games: &self.repo,
             game_id: game_id.try_convert()?,
         })
@@ -80,7 +80,7 @@ impl rpc::games_server::Games for Server {
         _request: Request<rpc::ListGamesRequest>,
     ) -> Result<Response<rpc::ListGamesResponse>, Status> {
         let game_previews =
-            spectator::list_game_previews(spectator::ListGamesParameters { games: &self.repo })
+            coordinator::list_games(coordinator::ListGamesParameters { games: &self.repo })
                 .await
                 .map_err(ToRpc::to_rpc)?;
 

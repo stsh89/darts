@@ -10,12 +10,6 @@ impl Display for Number {
     }
 }
 
-impl From<Number> for i32 {
-    fn from(value: Number) -> Self {
-        value.0.get() as i32
-    }
-}
-
 impl Number {
     pub(crate) unsafe fn new_unchecked(value: usize) -> Self {
         Number(NonZeroUsize::new_unchecked(value))
@@ -30,14 +24,10 @@ impl Number {
     }
 
     pub fn one() -> Self {
-        Number(unsafe { NonZeroUsize::new_unchecked(1) })
+        unsafe { Self::new_unchecked(1) }
     }
 
     pub fn value(&self) -> usize {
         self.0.get()
-    }
-
-    pub fn increment(&mut self) {
-        self.0 = self.0.saturating_add(1);
     }
 }

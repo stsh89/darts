@@ -5,6 +5,7 @@ members = [ "cli", "playground", "dataspine", "api", "api_mock"]
 [workspace.dependencies]
 anyhow = "1.0.80"
 chrono = "0.4.35"
+clap = { version = "4.5.3", features = ["derive"] }
 dataspine = { path = "dataspine" }
 eyre = "0.6.12"
 playground = { path = "playground" }
@@ -15,3 +16,5 @@ thiserror = "1.0.57"
 tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread", "sync"] }
 tonic = "0.11.0"
 uuid = "1.7.0"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = { version = "1.0", features = ["raw_value"] }

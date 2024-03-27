@@ -2,11 +2,11 @@
 
 # Game list item
 class Game
-  attr_reader :id, :start_time
+  attr_reader :id, :start_time, :end_time
 
   def initialize(proto_game)
     assign_id(proto_game.id)
-    assign_start_time(proto_game.start_time)
+    assign_start_time(proto_game.start_time) if proto_game.start_time
   end
 
   private

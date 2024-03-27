@@ -395,7 +395,10 @@ name = "cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "clap",
+ "dataspine",
  "playground",
+ "tokio",
 ]
 
 [[package]]
@@ -473,6 +476,8 @@ dependencies = [
  "chrono",
  "eyre",
  "playground",
+ "serde",
+ "serde_json",
  "sqlx",
  "thiserror",
  "uuid",
