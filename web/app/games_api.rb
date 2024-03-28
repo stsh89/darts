@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 require 'proto/games_pb'
 require 'proto/games_services_pb'
 require 'google/protobuf/well_known_types'
 
 # Games API
 class GamesApi
-  def initialize()
+  def initialize
     @stub = Proto::Playground::Games::Stub.new("#{GRPC_API_HOST}:50051", :this_channel_is_insecure)
   end
 
@@ -23,9 +25,9 @@ class GamesApi
     )
   end
 
-  def get_game_details(game_id:)
-    @stub.get_game_details(
-      Proto::Playground::GetGameDetailsRequest.new(game_id:)
+  def get_game(game_id:)
+    @stub.get_game(
+      Proto::Playground::GetGameRequest.new(game_id:)
     )
   end
 

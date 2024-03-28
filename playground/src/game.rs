@@ -5,6 +5,7 @@ use std::collections::BTreeSet;
 use uuid::Uuid;
 
 pub struct Game {
+    create_time: Option<DateTime<Utc>>,
     end_time: Option<DateTime<Utc>>,
     id: Option<Uuid>,
     players_number: Number,
@@ -12,6 +13,7 @@ pub struct Game {
     rounds: BTreeSet<Round>,
     start_time: Option<DateTime<Utc>>,
     state: State,
+    update_time: Option<DateTime<Utc>>,
 }
 
 pub struct Round {
@@ -27,12 +29,14 @@ pub struct NewRoundParameters {
 }
 
 pub struct LoadGameParameters {
-    pub id: Uuid,
-    pub rounds: Vec<Round>,
+    pub create_time: DateTime<Utc>,
     pub end_time: Option<DateTime<Utc>>,
-    pub start_time: Option<DateTime<Utc>>,
+    pub id: Uuid,
     pub players_number: Number,
     pub points_limit: Points,
+    pub rounds: Vec<Round>,
+    pub start_time: Option<DateTime<Utc>>,
+    pub update_time: DateTime<Utc>,
 }
 
 pub struct NewGameParameters {
@@ -41,6 +45,18 @@ pub struct NewGameParameters {
 }
 
 impl Game {
+    pub fn assign_create_time(&mut self, create_time: DateTime<Utc>) {
+        self.create_time = Some(create_time);
+    }
+
+    pub fn assign_id(&mut self, id: Uuid) {
+        self.id = Some(id);
+    }
+
+    pub fn assign_update_time(&mut self, update_time: DateTime<Utc>) {
+        self.update_time = Some(update_time);
+    }
+
     pub fn count_score(&mut self, score: Score) -> Result<(), Error> {
         match &self.state {
             State::NotStarted(state) => {
@@ -168,14 +184,20 @@ impl Game {
         }
     }
 
+    pub fn create_time(&self) -> Option<DateTime<Utc>> {
+        self.create_time
+    }
+
     pub fn load(parameters: LoadGameParameters) -> Result<Self, Error> {
         let LoadGameParameters {
-            id,
-            rounds,
+            create_time,
             end_time,
-            start_time,
+            id,
             players_number,
             points_limit,
+            rounds,
+            start_time,
+            update_time,
         } = parameters;
 
         let state = State::NotStarted(NotStartedState {
@@ -183,13 +205,15 @@ impl Game {
         });
 
         let mut game = GameBuilder::new()
+            .create_time(Some(create_time))
+            .end_time(end_time)
+            .id(Some(id))
             .players_number(players_number)
             .points_limit(points_limit)
-            .start_time(start_time)
-            .id(Some(id))
-            .end_time(end_time)
             .rounds(vec![])
+            .start_time(start_time)
             .state(state)
+            .update_time(Some(update_time))
             .build()?;
 
         for round in rounds {
@@ -217,13 +241,15 @@ impl Game {
         });
 
         GameBuilder::new()
+            .create_time(None)
+            .end_time(None)
+            .id(None)
             .players_number(players_number)
             .points_limit(points_limit)
-            .start_time(None)
-            .id(None)
-            .end_time(None)
             .rounds(vec![])
+            .start_time(None)
             .state(state)
+            .update_time(None)
             .build()
     }
 
@@ -233,10 +259,6 @@ impl Game {
 
     pub fn rounds(&self) -> &BTreeSet<Round> {
         &self.rounds
-    }
-
-    pub(crate) fn assign_id(&mut self, id: Uuid) {
-        self.id = Some(id);
     }
 
     pub fn start_time(&self) -> Option<DateTime<Utc>> {
@@ -261,21 +283,28 @@ impl Game {
             _ => None,
         }
     }
+
+    pub fn update_time(&self) -> Option<DateTime<Utc>> {
+        self.update_time
+    }
 }
 
 struct GameBuilder {
+    create_time: Result<Option<DateTime<Utc>>, Error>,
+    end_time: Result<Option<DateTime<Utc>>, Error>,
     id: Result<Option<Uuid>, Error>,
     players_number: Result<Number, Error>,
     points_limit: Result<Points, Error>,
     rounds: Result<BTreeSet<Round>, Error>,
     start_time: Result<Option<DateTime<Utc>>, Error>,
-    end_time: Result<Option<DateTime<Utc>>, Error>,
     state: Result<State, Error>,
+    update_time: Result<Option<DateTime<Utc>>, Error>,
 }
 
 impl GameBuilder {
     fn build(self) -> Result<Game, Error> {
         Ok(Game {
+            create_time: self.create_time?,
             end_time: self.end_time?,
             id: self.id?,
             players_number: self.players_number?,
@@ -283,13 +312,21 @@ impl GameBuilder {
             rounds: self.rounds?,
             start_time: self.start_time?,
             state: self.state?,
+            update_time: self.update_time?,
         })
+    }
+
+    fn create_time(mut self, create_time: Option<DateTime<Utc>>) -> Self {
+        self.create_time = Ok(create_time);
+
+        self
     }
 
     fn new() -> Self {
         let error = |field: &str| Error::unexpected(format!("Game {field} not set"));
 
         Self {
+            create_time: error("create time").into(),
             end_time: error("end time").into(),
             id: error("id").into(),
             players_number: error("players number").into(),
@@ -297,6 +334,7 @@ impl GameBuilder {
             rounds: error("rounds").into(),
             start_time: error("start time").into(),
             state: error("state").into(),
+            update_time: error("update time").into(),
         }
     }
 
@@ -342,6 +380,12 @@ impl GameBuilder {
 
     fn state(mut self, state: State) -> Self {
         self.state = Ok(state);
+
+        self
+    }
+
+    fn update_time(mut self, update_time: Option<DateTime<Utc>>) -> Self {
+        self.update_time = Ok(update_time);
 
         self
     }

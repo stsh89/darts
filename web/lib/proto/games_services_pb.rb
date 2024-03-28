@@ -18,7 +18,7 @@ module Proto
         rpc :CancelLastScore, ::Proto::Playground::CancelLastScoreRequest, ::Proto::Playground::CancelLastScoreResponse
         rpc :CountPoints, ::Proto::Playground::CountPointsRequest, ::Proto::Playground::CountPointsResponse
         rpc :CreateGame, ::Proto::Playground::CreateGameRequest, ::Proto::Playground::Game
-        rpc :GetGameDetails, ::Proto::Playground::GetGameDetailsRequest, ::Proto::Playground::GameDetails
+        rpc :GetGame, ::Proto::Playground::GetGameRequest, ::Proto::Playground::Game
         rpc :ListGames, ::Proto::Playground::ListGamesRequest, ::Proto::Playground::ListGamesResponse
       end
 

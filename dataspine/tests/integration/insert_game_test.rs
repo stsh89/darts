@@ -6,15 +6,18 @@ use sqlx::PgPool;
 #[sqlx::test]
 async fn it_saves_game(pool: PgPool) -> anyhow::Result<()> {
     let count_games_was = helpers::count_games(&pool).await?;
-    let game = Game::new(NewGameParameters {
+    let mut game = Game::new(NewGameParameters {
         points_limit: Points::new(301),
         players_number: Number::one(),
     })?;
 
-    let id = Repo::new(pool.clone()).insert_game(&game).await?;
+    Repo::new(pool.clone()).insert_game(&mut game).await?;
     let count_games_now = helpers::count_games(&pool).await?;
 
-    assert!(!id.is_nil());
+    assert!(game.id().is_some());
+    assert!(game.create_time().is_some());
+    assert!(game.update_time().is_some());
+
     assert_eq!(count_games_now - count_games_was, 1);
 
     Ok(())

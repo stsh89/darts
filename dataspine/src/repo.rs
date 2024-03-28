@@ -1,5 +1,5 @@
 use crate::{
-    games::{FindGame, InsertGame, ListGames, RoundsColumn, UpdateGame},
+    game_row::{FindGame, InsertGame, ListGames, RoundsColumnItem, UpdateGame},
     GameRow,
 };
 use playground::{
@@ -28,7 +28,7 @@ impl coordinator::GetGame for Repo {
 }
 
 impl coordinator::InsertGame for Repo {
-    async fn insert_game(&self, game: &Game) -> Result<Uuid, Error> {
+    async fn insert_game(&self, game: &mut Game) -> Result<(), Error> {
         self.conn().await?.insert_game(game).await
     }
 }
@@ -80,12 +80,14 @@ impl TryFrom<GameRow> for Game {
 
     fn try_from(row: GameRow) -> Result<Self, Self::Error> {
         let GameRow {
-            id,
-            start_time,
             end_time,
-            points_limit,
+            id,
+            insert_time,
             players_number,
+            points_limit,
             rounds,
+            start_time,
+            update_time,
         } = row;
 
         let players_number = players_number.try_into().map_err(eyre::Report::new)?;
@@ -96,21 +98,23 @@ impl TryFrom<GameRow> for Game {
             .collect::<Result<Vec<Round>, Error>>()?;
 
         Game::load(LoadGameParameters {
-            id,
-            rounds,
+            create_time: insert_time,
             end_time,
-            start_time,
+            id,
             players_number: Number::new(players_number)?,
             points_limit: Points::new(points_limit),
+            rounds,
+            start_time,
+            update_time,
         })
     }
 }
 
-impl TryFrom<&RoundsColumn> for Round {
+impl TryFrom<&RoundsColumnItem> for Round {
     type Error = Error;
 
-    fn try_from(value: &RoundsColumn) -> Result<Self, Self::Error> {
-        let RoundsColumn {
+    fn try_from(value: &RoundsColumnItem) -> Result<Self, Self::Error> {
+        let RoundsColumnItem {
             round_number,
             player_number,
             points_kind,
@@ -143,22 +147,7 @@ fn player_score(points: i32, points_kind: String) -> Result<PlayerScore, Error> 
     Err(Error::Unexpected(eyre::eyre!("Invalid points kind")))
 }
 
-impl From<&Game> for GameRow {
-    fn from(value: &Game) -> Self {
-        let rounds: Vec<RoundsColumn> = value.rounds().iter().map(Into::into).collect();
-
-        Self {
-            start_time: value.start_time(),
-            end_time: value.end_time(),
-            points_limit: value.points_limit().value().into(),
-            players_number: value.players_number().value() as i32,
-            rounds: rounds.into(),
-            id: value.id().unwrap_or_else(Uuid::nil),
-        }
-    }
-}
-
-impl From<&Round> for RoundsColumn {
+impl From<&Round> for RoundsColumnItem {
     fn from(value: &Round) -> Self {
         let (points_kind, points) = match value.player_score() {
             PlayerScore::Regular(score) => (POINTS_KIND_REGULAR, score.points().value().into()),

@@ -8,7 +8,7 @@ service Games {
     rpc CancelLastScore (CancelLastScoreRequest) returns (CancelLastScoreResponse);
     rpc CountPoints (CountPointsRequest) returns (CountPointsResponse);
     rpc CreateGame (CreateGameRequest) returns (Game);
-    rpc GetGameDetails (GetGameDetailsRequest) returns (GameDetails);
+    rpc GetGame (GetGameRequest) returns (Game);
     rpc ListGames (ListGamesRequest) returns (ListGamesResponse);
 }
 
@@ -17,7 +17,7 @@ message CancelLastScoreRequest {
 }
 
 message CancelLastScoreResponse {
-    GameDetails game_details = 1;
+    Game game = 1;
 }
 
 message CountPointsRequest {
@@ -26,13 +26,13 @@ message CountPointsRequest {
 }
 
 message CountPointsResponse {
-    GameDetails game_details = 1;
+    Game game = 1;
 }
 
 message CreateGameRequest {
 }
 
-message GetGameDetailsRequest {
+message GetGameRequest {
     string game_id = 1;
 }
 
@@ -45,17 +45,13 @@ message ListGamesResponse {
 
 message Game {
     string id = 1;
-
-    google.protobuf.Timestamp start_time = 2;
-}
-
-message GameDetails {
-    string game_id = 1;
     string winner = 2;
     string player = 3;
     int32 player_points_to_win = 4;
-    repeated Round rounds = 5;
-    repeated PlayerDetails player_details = 6;
+    google.protobuf.Timestamp create_time = 5;
+    google.protobuf.Timestamp update_time = 6;
+    repeated Round rounds = 7;
+    repeated PlayerDetails player_details = 8;
 }
 
 message PlayerDetails {
@@ -75,6 +71,6 @@ message Point {
 
 enum PointKind {
     POINT_KIND_UNSET = 0;
-    POINT_KIND_SCORE = 1;
+    POINT_KIND_REGULAR = 1;
     POINT_KIND_OVERTHROW = 2;
 }

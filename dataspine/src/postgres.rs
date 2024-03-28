@@ -1,4 +1,5 @@
-use crate::{FindGame, GameRow, InsertGame, ListGames, RoundsColumn, UpdateGame};
+use crate::{FindGame, GameRow, InsertGame, ListGames, RoundsColumnItem, UpdateGame};
+use chrono::{DateTime, Utc};
 use playground::{Error, Game};
 use sqlx::{types::Json, PgConnection};
 use uuid::Uuid;
@@ -15,22 +16,37 @@ impl FindGame for PgConnection {
 }
 
 impl InsertGame for PgConnection {
-    async fn insert_game(&mut self, game: &Game) -> Result<Uuid, Error> {
-        let row = GameRow::from(game);
+    async fn insert_game(&mut self, game: &mut Game) -> Result<(), Error> {
+        struct InsertReturnValues {
+            id: Uuid,
+            insert_time: DateTime<Utc>,
+            update_time: DateTime<Utc>,
+        }
 
-        let id = sqlx::query_file_scalar!(
+        let end_time = game.end_time();
+        let players_number = game.players_number().value() as i32;
+        let points_limit = game.points_limit().value() as i32;
+        let rounds: Vec<RoundsColumnItem> = game.rounds().iter().map(Into::into).collect();
+        let start_time = game.start_time();
+
+        let values = sqlx::query_file_as!(
+            InsertReturnValues,
             "queries/insert_game.sql",
-            row.end_time,
-            row.players_number,
-            row.points_limit,
-            row.rounds as _,
-            row.start_time
+            end_time,
+            players_number,
+            points_limit,
+            Json(rounds) as _,
+            start_time
         )
         .fetch_one(self)
         .await
         .map_err(eyre::Report::new)?;
 
-        Ok(id)
+        game.assign_id(values.id);
+        game.assign_create_time(values.insert_time);
+        game.assign_update_time(values.update_time);
+
+        Ok(())
     }
 }
 
@@ -47,16 +63,23 @@ impl ListGames for PgConnection {
 
 impl UpdateGame for PgConnection {
     async fn update_game(&mut self, game: &Game) -> Result<(), Error> {
-        let row = GameRow::from(game);
+        let id = game
+            .id()
+            .ok_or(eyre::eyre!("Trying to update game without id"))?;
+        let end_time = game.end_time();
+        let players_number = game.players_number().value() as i32;
+        let points_limit = game.points_limit().value() as i32;
+        let rounds: Vec<RoundsColumnItem> = game.rounds().iter().map(Into::into).collect();
+        let start_time = game.start_time();
 
         sqlx::query_file!(
             "queries/update_game.sql",
-            row.id,
-            row.end_time,
-            row.players_number,
-            row.points_limit,
-            row.rounds as _,
-            row.start_time,
+            id,
+            end_time,
+            players_number,
+            points_limit,
+            Json(rounds) as _,
+            start_time,
         )
         .execute(self)
         .await

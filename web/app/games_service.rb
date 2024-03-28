@@ -2,7 +2,6 @@
 
 require_relative './games_api'
 require_relative './game'
-require_relative './game_details'
 
 # Result
 class Result
@@ -40,22 +39,22 @@ class GamesService
   class << self
     def cancel_last_score(game_id:)
       response = GamesApi.new.cancel_last_score(game_id:)
-      game_details = GameDetails.new(response.game_details)
+      game = Game.new(response.game)
 
-      Result.ok(game_details)
+      Result.ok(game)
     end
 
     def count_points(game_id:, points:)
       response = GamesApi.new.count_points(game_id:, points:)
-      game_details = GameDetails.new(response.game_details)
+      game = Game.new(response.game)
 
-      Result.ok(game_details)
+      Result.ok(game)
     end
 
-    def get_game_details(game_id:)
-      game_details = GameDetails.new(GamesApi.new.get_game_details(game_id:))
+    def get_game(game_id:)
+      game = Game.new(GamesApi.new.get_game(game_id:))
 
-      Result.ok(game_details)
+      Result.ok(game)
     end
 
     def create_game

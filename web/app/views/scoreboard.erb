@@ -1,8 +1,8 @@
 <div class="block"><a href="/">Back</a></div>
 
-<% unless game_details.winner %>
+<% unless game.winner %>
 <div class="block">
-  <form class="block" action="/games/<%= game_details.game_id %>/count_points" method="post" autocomplete="off" onsubmit="countPoints(event, this)">
+  <form class="block" action="/games/<%= game.id %>/count_points" method="post" autocomplete="off" onsubmit="countPoints(event, this)">
     <div class="field">
       <div class="control">
         <input class="input" inputmode="numeric" type="text" name="score" pattern="[0-9\+]+" autofocus="true">
@@ -13,11 +13,11 @@
 <% end %>
 
 <div class="block" id="js-scores">
-  <%= erb :scores, locals: { game_details: } %>
+  <%= erb :scores, locals: { game: } %>
 </div>
 
 <div class="block has-text-right">
-  <form action="/games/<%= game_details.game_id %>/cancel_last_score" method="post" onsubmit="cancelLastScore(event, this)">
+  <form action="/games/<%= game.id %>/cancel_last_score" method="post" onsubmit="cancelLastScore(event, this)">
     <div class="field">
       <div class="control">
         <button class="button is-danger" type="submit">Cancel last score</button>

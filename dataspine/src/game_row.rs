@@ -1,11 +1,11 @@
 use chrono::{DateTime, Utc};
 use playground::{Error, Game};
 use serde::{Deserialize, Serialize};
-use sqlx::{prelude::FromRow, types::Json};
+use sqlx::types::Json;
 use uuid::Uuid;
 
 pub trait InsertGame {
-    async fn insert_game(&mut self, game: &Game) -> Result<Uuid, Error>;
+    async fn insert_game(&mut self, game: &mut Game) -> Result<(), Error>;
 }
 
 pub trait FindGame {
@@ -20,18 +20,19 @@ pub trait UpdateGame {
     async fn update_game(&mut self, game: &Game) -> Result<(), Error>;
 }
 
-#[derive(FromRow)]
 pub struct GameRow {
-    pub id: Uuid,
-    pub start_time: Option<DateTime<Utc>>,
     pub end_time: Option<DateTime<Utc>>,
-    pub points_limit: i32,
+    pub id: Uuid,
+    pub insert_time: DateTime<Utc>,
     pub players_number: i32,
-    pub rounds: Json<Vec<RoundsColumn>>,
+    pub points_limit: i32,
+    pub rounds: Json<Vec<RoundsColumnItem>>,
+    pub start_time: Option<DateTime<Utc>>,
+    pub update_time: DateTime<Utc>,
 }
 
 #[derive(Deserialize, Serialize, Clone)]
-pub struct RoundsColumn {
+pub struct RoundsColumnItem {
     pub round_number: i32,
     pub player_number: i32,
     pub points_kind: String,

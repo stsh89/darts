@@ -17,7 +17,8 @@ impl rpc::games_server::Games for Server {
         &self,
         _request: Request<rpc::CancelLastScoreRequest>,
     ) -> Result<Response<rpc::CancelLastScoreResponse>, Status> {
-        Ok(Response::new(rpc::CancelLastScoreResponse::default()))
+        // Ok(Response::new(rpc::CancelLastScoreResponse::default()))
+        Err(Status::unimplemented("Not yet implemented"))
     }
 
     async fn count_points(
@@ -28,7 +29,7 @@ impl rpc::games_server::Games for Server {
 
         let score = Score::new(points as u16).map_err(ToRpc::to_rpc)?;
 
-        let game_state = coordinator::count_score(coordinator::CountScoreParameters {
+        let game = coordinator::count_score(coordinator::CountScoreParameters {
             games: &self.repo,
             game_id: game_id.try_convert()?,
             score,
@@ -37,7 +38,7 @@ impl rpc::games_server::Games for Server {
         .map_err(ToRpc::to_rpc)?;
 
         Ok(Response::new(rpc::CountPointsResponse {
-            game_details: Some(game_state.to_rpc()),
+            game: Some(game.to_rpc()),
         }))
     }
 
@@ -53,17 +54,14 @@ impl rpc::games_server::Games for Server {
         .await
         .map_err(ToRpc::to_rpc)?;
 
-        Ok(Response::new(rpc::Game {
-            id: game.id().unwrap().to_string(),
-            start_time: game.start_time().map(ToRpc::to_rpc),
-        }))
+        Ok(Response::new(game.to_rpc()))
     }
 
-    async fn get_game_details(
+    async fn get_game(
         &self,
-        request: Request<rpc::GetGameDetailsRequest>,
-    ) -> Result<Response<rpc::GameDetails>, Status> {
-        let rpc::GetGameDetailsRequest { game_id } = request.into_inner();
+        request: Request<rpc::GetGameRequest>,
+    ) -> Result<Response<rpc::Game>, Status> {
+        let rpc::GetGameRequest { game_id } = request.into_inner();
 
         let game = coordinator::get_game(coordinator::GetGameParameters {
             games: &self.repo,

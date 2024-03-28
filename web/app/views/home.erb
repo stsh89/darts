@@ -14,12 +14,12 @@
 <div class="block">
   <table class="table is-fullwidth is-striped">
     <thead>
-      <tr><th>Start time</th><th>End time</th><th>Actions</th></tr>
+      <tr><th>Create time</th><th>Update time</th><th>Actions</th></tr>
     </thead>
     <tbody>
       <% games.each do |game| %>
       <tr>
-        <td><%= game.start_time %></td><td><%= game.end_time %></td><td><a href="/games/<%= game.id %>">Show</a></td>
+        <td><%= game.create_time %></td><td><%= game.update_time %></td><td><a href="/games/<%= game.id %>">Show</a></td>
       </tr>
       <% end %>
     </tbody>

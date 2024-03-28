@@ -13,29 +13,29 @@ get '/' do
 end
 
 get '/games/:game_id' do
-  result = GamesService.get_game_details(game_id: params[:game_id])
-  game_details = handle_result(result)
+  result = GamesService.get_game(game_id: params[:game_id])
+  game = handle_result(result)
 
-  erb :scoreboard, locals: { game_details: }
+  erb :scoreboard, locals: { game: }
 end
 
 post '/games/:game_id/count_points' do
   points = params[:score].to_i
   result = GamesService.count_points(game_id: params[:game_id], points:)
-  game_details = handle_result(result)
+  game = handle_result(result)
 
-  if game_details.winner
-    redirect "/games/#{game_details.game_id}"
+  if game.winner
+    redirect "/games/#{game.id}"
   else
-    erb :scores, layout: false, locals: { game_details: }
+    erb :scores, layout: false, locals: { game: }
   end
 end
 
 post '/games/:game_id/cancel_last_score' do
   result = GamesService.cancel_last_score(game_id: params[:game_id])
-  game_details = handle_result(result)
+  game = handle_result(result)
 
-  erb :scores, layout: false, locals: { game_details: }
+  erb :scores, layout: false, locals: { game: }
 end
 
 post '/games' do

@@ -1,7 +1,7 @@
-<% if game_details.winner %>
-<h1 class="title"><%= game_details.winner.name %> wins in <%= game_details.rounds_number %> rounds!!!</h1>
+<% if game.winner %>
+<h1 class="title"><%= game.winner.name %> wins in <%= game.rounds_number %> rounds!!!</h1>
 <% else %>
-<h1 class="title"><%= game_details.player %> / <%= game_details.player_points_to_win %></h1>
+<h1 class="title"><%= game.player %> / <%= game.player_points_to_win %></h1>
 <% end %>
 
 <div class="block is-size-5">
@@ -9,13 +9,13 @@
     <thead>
       <tr>
         <th>#</th>
-        <% game_details.player_details.each do |player| %>
+        <% game.player_details.each do |player| %>
             <th><%= player.name %> / <%= player.points_to_win %></th>
         <% end %>
       </tr>
     </thead>
     <tbody>
-      <% game_details.rounds.each do |round| %>
+      <% game.rounds.each do |round| %>
       <tr>
         <td><%= round.number %></td>
         <% round.scores.each do |score| %>

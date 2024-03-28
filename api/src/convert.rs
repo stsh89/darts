@@ -17,15 +17,6 @@ pub trait TryConvert<T> {
 
 impl ToRpc<rpc::Game> for Game {
     fn to_rpc(self) -> rpc::Game {
-        rpc::Game {
-            id: self.id().unwrap().to_string(),
-            start_time: self.start_time().map(ToRpc::to_rpc),
-        }
-    }
-}
-
-impl ToRpc<rpc::GameDetails> for Game {
-    fn to_rpc(self) -> rpc::GameDetails {
         let state = self.state();
 
         let (player, player_points_to_win) = match state {
@@ -40,8 +31,8 @@ impl ToRpc<rpc::GameDetails> for Game {
             State::Finished(_) => ("".to_string(), 0),
         };
 
-        rpc::GameDetails {
-            game_id: self.id().unwrap().to_string(),
+        rpc::Game {
+            id: self.id().unwrap().to_string(),
             winner: self
                 .winner()
                 .map(|number| format!("Player{}", number))
@@ -50,6 +41,8 @@ impl ToRpc<rpc::GameDetails> for Game {
             player_points_to_win,
             rounds: rounds(&self),
             player_details: player_details(&self),
+            create_time: self.create_time().map(ToRpc::to_rpc),
+            update_time: self.update_time().map(ToRpc::to_rpc),
         }
     }
 }
@@ -58,7 +51,7 @@ impl ToRpc<rpc::Point> for &PlayerScore {
     fn to_rpc(self) -> rpc::Point {
         match self {
             PlayerScore::Regular(score) => rpc::Point {
-                kind: rpc::PointKind::Score.into(),
+                kind: rpc::PointKind::Regular.into(),
                 value: score.points().value().into(),
             },
             PlayerScore::Overthrow(score) => rpc::Point {

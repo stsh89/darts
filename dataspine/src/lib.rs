@@ -1,7 +1,7 @@
-mod games;
+mod game_row;
 mod postgres;
 mod repo;
 
 pub use repo::Repo;
 
-pub(crate) use games::{FindGame, GameRow, InsertGame, ListGames, RoundsColumn, UpdateGame};
+pub(crate) use game_row::{FindGame, GameRow, InsertGame, ListGames, RoundsColumnItem, UpdateGame};

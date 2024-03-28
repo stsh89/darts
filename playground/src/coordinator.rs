@@ -8,7 +8,7 @@ pub trait GetGame {
 
 pub trait InsertGame {
     #[allow(async_fn_in_trait)]
-    async fn insert_game(&self, game: &Game) -> Result<Uuid, Error>;
+    async fn insert_game(&self, game: &mut Game) -> Result<(), Error>;
 }
 
 pub trait ListGames {
@@ -87,8 +87,7 @@ where
         points_limit,
     })?;
 
-    let id = games.insert_game(&game).await?;
-    game.assign_id(id);
+    games.insert_game(&mut game).await?;
 
     Ok(game)
 }

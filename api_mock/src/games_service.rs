@@ -14,14 +14,15 @@ pub struct GamesService {
 
 #[derive(Clone)]
 struct Game {
+    create_time: DateTime<Utc>,
     id: Uuid,
-    winner: Option<String>,
-    start_time: DateTime<Utc>,
-    player: Player,
-    player_points_to_win: u16,
-    rounds: Vec<Round>,
     player_details: Vec<PlayerDetails>,
+    player_points_to_win: u16,
+    player: Player,
+    rounds: Vec<Round>,
     scores: HashMap<String, Vec<u16>>,
+    update_time: DateTime<Utc>,
+    winner: Option<String>,
 }
 
 #[derive(Copy, Clone)]
@@ -109,7 +110,7 @@ impl rpc::games_server::Games for GamesService {
             .map_err(|_err| Status::internal("Error"))?;
 
         Ok(Response::new(rpc::CancelLastScoreResponse {
-            game_details: Some(proto),
+            game: Some(proto),
         }))
     }
 
@@ -149,7 +150,7 @@ impl rpc::games_server::Games for GamesService {
             .map_err(|_err| Status::internal("Error"))?;
 
         Ok(Response::new(rpc::CountPointsResponse {
-            game_details: Some(proto),
+            game: Some(proto),
         }))
     }
 
@@ -160,10 +161,11 @@ impl rpc::games_server::Games for GamesService {
         let game = Game {
             id: Uuid::new_v4(),
             winner: None,
-            start_time: Utc::now(),
             player: Player::One,
             player_points_to_win: 301,
             rounds: vec![],
+            update_time: Utc::now(),
+            create_time: Utc::now(),
             scores: HashMap::from_iter(vec![
                 (Player::One.name(), vec![]),
                 (Player::Two.name(), vec![]),
@@ -182,15 +184,16 @@ impl rpc::games_server::Games for GamesService {
 
         let mut games = self.games.write().await;
         games.insert(game.id, game.clone());
+        let proto: rpc::Game = game.try_into().map_err(|_err| Status::internal("Error"))?;
 
-        Ok(Response::new(game.into()))
+        Ok(Response::new(proto))
     }
 
-    async fn get_game_details(
+    async fn get_game(
         &self,
-        request: Request<rpc::GetGameDetailsRequest>,
-    ) -> Result<Response<rpc::GameDetails>, Status> {
-        let rpc::GetGameDetailsRequest { game_id } = request.into_inner();
+        request: Request<rpc::GetGameRequest>,
+    ) -> Result<Response<rpc::Game>, Status> {
+        let rpc::GetGameRequest { game_id } = request.into_inner();
         let game_id = Uuid::parse_str(&game_id)
             .map_err(|_err| Status::invalid_argument("Invalid game id"))?;
 
@@ -212,7 +215,12 @@ impl rpc::games_server::Games for GamesService {
     ) -> Result<Response<rpc::ListGamesResponse>, Status> {
         let games = self.games.read().await;
 
-        let proto = games.values().cloned().map(Into::into).collect::<Vec<_>>();
+        let proto = games
+            .values()
+            .cloned()
+            .map(TryInto::try_into)
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|_err| Status::internal("Error"))?;
 
         Ok(Response::new(rpc::ListGamesResponse { games: proto }))
     }
@@ -226,26 +234,19 @@ impl GamesService {
     }
 }
 
-impl From<Game> for rpc::Game {
-    fn from(game: Game) -> Self {
-        Self {
-            id: game.id.to_string(),
-            start_time: Some(timestamp(game.start_time)),
-        }
-    }
-}
-
-impl TryFrom<Game> for rpc::GameDetails {
+impl TryFrom<Game> for rpc::Game {
     type Error = anyhow::Error;
 
     fn try_from(value: Game) -> anyhow::Result<Self> {
         Ok(Self {
-            game_id: value.id.to_string(),
+            id: value.id.to_string(),
             winner: value.winner.unwrap_or_default(),
             player: value.player.name(),
             player_points_to_win: value.player_points_to_win.into(),
             rounds: value.rounds.into_iter().rev().map(Into::into).collect(),
             player_details: value.player_details.into_iter().map(Into::into).collect(),
+            create_time: Some(timestamp(value.create_time)),
+            update_time: Some(timestamp(value.update_time)),
         })
     }
 }
@@ -273,7 +274,7 @@ impl From<Point> for rpc::Point {
         Self {
             value: value.into_inner().into(),
             kind: match value {
-                Point::Score(_) => rpc::PointKind::Score.into(),
+                Point::Score(_) => rpc::PointKind::Regular.into(),
                 Point::Overthrow(_) => rpc::PointKind::Overthrow.into(),
             },
         }
