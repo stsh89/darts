@@ -16,7 +16,7 @@
   <%= erb :scores, locals: { game: } %>
 </div>
 
-<div class="block has-text-right">
+<div class="block has-text-right is-hidden">
   <form action="/games/<%= game.id %>/cancel_last_score" method="post" onsubmit="cancelLastScore(event, this)">
     <div class="field">
       <div class="control">

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'sinatra'
-require_relative './games_service'
+require_relative 'games_service'
 
 GRPC_API_HOST = ENV['GRPC_API_HOST'] || '[::1]'
 

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative './games_api'
-require_relative './game'
+require_relative 'games_api'
+require_relative 'game'
 
 # Result
 class Result

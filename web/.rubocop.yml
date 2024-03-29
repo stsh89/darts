@@ -1,0 +1,6 @@
+inherit_from: ~/.local/share/mise/installs/ruby/3.3.0/lib/ruby/gems/3.3.0/gems/rubocop-1.62.1/config/default.yml
+
+AllCops:
+  NewCops: enable
+  Exclude:
+    - 'lib/proto/**'
