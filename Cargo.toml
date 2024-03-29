@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = [ "cli", "playground", "dataspine", "api", "api_mock"]
+members = [ "cli", "playground", "dataspine", "api", "api_mock", "rusty-web"]
 
 [workspace.dependencies]
 anyhow = "1.0.80"
