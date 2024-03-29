@@ -7,3 +7,4 @@ SET
     start_time = $6,
     update_time = default
 WHERE id = $1
+RETURNING update_time;

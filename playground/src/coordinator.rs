@@ -18,7 +18,7 @@ pub trait ListGames {
 
 pub trait UpdateGame {
     #[allow(async_fn_in_trait)]
-    async fn update_game(&self, game: &Game) -> Result<(), Error>;
+    async fn update_game(&self, game: &mut Game) -> Result<(), Error>;
 }
 
 pub struct CountScoreParameters<'a, G>
@@ -67,7 +67,7 @@ where
     let mut game = games.get_game(game_id).await?;
 
     game.count_score(score)?;
-    games.update_game(&game).await?;
+    games.update_game(&mut game).await?;
 
     Ok(game)
 }

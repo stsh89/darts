@@ -17,7 +17,7 @@ pub trait ListGames {
 }
 
 pub trait UpdateGame {
-    async fn update_game(&mut self, game: &Game) -> Result<(), Error>;
+    async fn update_game(&mut self, game: &mut Game) -> Result<(), Error>;
 }
 
 pub struct GameRow {

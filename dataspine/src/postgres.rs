@@ -42,9 +42,9 @@ impl InsertGame for PgConnection {
         .await
         .map_err(eyre::Report::new)?;
 
-        game.assign_id(values.id);
-        game.assign_create_time(values.insert_time);
-        game.assign_update_time(values.update_time);
+        game.assign_id(values.id)?;
+        game.assign_create_time(values.insert_time)?;
+        game.change_update_time(values.update_time)?;
 
         Ok(())
     }
@@ -62,7 +62,7 @@ impl ListGames for PgConnection {
 }
 
 impl UpdateGame for PgConnection {
-    async fn update_game(&mut self, game: &Game) -> Result<(), Error> {
+    async fn update_game(&mut self, game: &mut Game) -> Result<(), Error> {
         let id = game
             .id()
             .ok_or(eyre::eyre!("Trying to update game without id"))?;
@@ -72,7 +72,7 @@ impl UpdateGame for PgConnection {
         let rounds: Vec<RoundsColumnItem> = game.rounds().iter().map(Into::into).collect();
         let start_time = game.start_time();
 
-        sqlx::query_file!(
+        let update_time = sqlx::query_file_scalar!(
             "queries/update_game.sql",
             id,
             end_time,
@@ -81,9 +81,11 @@ impl UpdateGame for PgConnection {
             Json(rounds) as _,
             start_time,
         )
-        .execute(self)
+        .fetch_one(self)
         .await
         .map_err(eyre::Report::new)?;
+
+        game.change_update_time(update_time)?;
 
         Ok(())
     }

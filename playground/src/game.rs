@@ -45,16 +45,120 @@ pub struct NewGameParameters {
 }
 
 impl Game {
-    pub fn assign_create_time(&mut self, create_time: DateTime<Utc>) {
+    pub fn assign_create_time(&mut self, create_time: DateTime<Utc>) -> Result<(), Error> {
+        if self.create_time.is_some() {
+            return Error::unexpected("Attempt to reassign game creation time").into();
+        }
+
         self.create_time = Some(create_time);
+
+        Ok(())
     }
 
-    pub fn assign_id(&mut self, id: Uuid) {
+    pub fn assign_id(&mut self, id: Uuid) -> Result<(), Error> {
+        if self.id.is_some() {
+            return Error::unexpected("Game ID reassignment attempt").into();
+        }
+
         self.id = Some(id);
+
+        Ok(())
     }
 
-    pub fn assign_update_time(&mut self, update_time: DateTime<Utc>) {
+    fn assign_rounds(&mut self, rounds: Vec<Round>) -> Result<(), Error> {
+        if !self.rounds.is_empty() {
+            return Error::unexpected("Game rounds reassignment attempt").into();
+        }
+
+        for round in rounds {
+            let points = round.player_score().score().points();
+            let score = Score::new(points.value())?;
+
+            self.count_score(score)?;
+        }
+
+        Ok(())
+    }
+
+    fn assign_start_time(&mut self, start_time: DateTime<Utc>) -> Result<(), Error> {
+        if self.start_time.is_some() {
+            return Error::failed_precondition("Attempt to reassign start time").into();
+        }
+
+        self.start_time = Some(start_time);
+
+        Ok(())
+    }
+
+    fn assign_end_time(&mut self, end_time: DateTime<Utc>) -> Result<(), Error> {
+        if self.end_time.is_some() {
+            return Error::failed_precondition("Attempt to reassign end time").into();
+        }
+
+        if let Some(time) = self.start_time {
+            if time > end_time {
+                return Error::invalid_argument("End time cannot be less than start time").into();
+            }
+        } else {
+            return Error::failed_precondition("Attempt to assign end time without start time")
+                .into();
+        }
+
+        self.end_time = Some(end_time);
+
+        Ok(())
+    }
+
+    fn change_players_number(&mut self, players_number: Number) -> Result<(), Error> {
+        if self.is_in_progress() {
+            return Error::failed_precondition(
+                "Cannot update players number when game is in progress",
+            )
+            .into();
+        };
+
+        if self.is_finished() {
+            return Error::failed_precondition("Cannot update players number when game is over")
+                .into();
+        };
+
+        self.players_number = players_number;
+
+        Ok(())
+    }
+
+    fn change_points_limit(&mut self, points_limit: Points) -> Result<(), Error> {
+        if points_limit.is_zero() {
+            return Error::invalid_argument("Points limit cannot be zero").into();
+        };
+
+        if self.is_in_progress() {
+            return Error::failed_precondition(
+                "Cannot update points limit when game is in progress",
+            )
+            .into();
+        };
+
+        if self.is_finished() {
+            return Error::failed_precondition("Cannot update points limit when Game is over")
+                .into();
+        };
+
+        self.points_limit = points_limit;
+
+        Ok(())
+    }
+
+    pub fn change_update_time(&mut self, update_time: DateTime<Utc>) -> Result<(), Error> {
+        if let Some(time) = self.update_time {
+            if time > update_time {
+                return Error::invalid_argument("Update time cannot be less than before").into();
+            }
+        }
+
         self.update_time = Some(update_time);
+
+        Ok(())
     }
 
     pub fn count_score(&mut self, score: Score) -> Result<(), Error> {
@@ -89,7 +193,7 @@ impl Game {
                         winner: player_number,
                     });
 
-                    self.end_time = Some(Utc::now());
+                    self.assign_end_time(Utc::now())?;
 
                     return Ok(());
                 }
@@ -101,7 +205,7 @@ impl Game {
                     player_number = unsafe { Number::new_unchecked(2) };
                 }
 
-                self.start_time = Some(Utc::now());
+                self.assign_start_time(Utc::now())?;
 
                 self.state = State::InProgress(InProgressState {
                     player_number,
@@ -112,7 +216,7 @@ impl Game {
                 Ok(())
             }
             State::Finished(_) => {
-                Error::failed_precondition("Cannot count a score when Game is over").into()
+                Error::failed_precondition("Cannot count a score when game is over").into()
             }
             State::InProgress(state) => {
                 let points = score.points();
@@ -149,7 +253,7 @@ impl Game {
                         winner: state.player_number,
                     });
 
-                    self.end_time = Some(Utc::now());
+                    self.assign_end_time(Utc::now())?;
 
                     return Ok(());
                 }
@@ -188,46 +292,59 @@ impl Game {
         self.create_time
     }
 
-    pub fn load(parameters: LoadGameParameters) -> Result<Self, Error> {
-        let LoadGameParameters {
-            create_time,
-            end_time,
-            id,
-            players_number,
-            points_limit,
-            rounds,
-            start_time,
-            update_time,
-        } = parameters;
-
-        let state = State::NotStarted(NotStartedState {
-            points_to_win: points_limit,
-        });
-
-        let mut game = GameBuilder::new()
-            .create_time(Some(create_time))
-            .end_time(end_time)
-            .id(Some(id))
-            .players_number(players_number)
-            .points_limit(points_limit)
-            .rounds(vec![])
-            .start_time(start_time)
-            .state(state)
-            .update_time(Some(update_time))
-            .build()?;
-
-        for round in rounds {
-            let points = round.player_score().score().points();
-            let score = Score::new(points.value())?;
-
-            game.count_score(score)?;
-        }
-
-        Ok(game)
+    pub fn end_time(&self) -> Option<DateTime<Utc>> {
+        self.end_time
     }
 
     pub fn id(&self) -> Option<Uuid> {
         self.id
+    }
+
+    fn init() -> Game {
+        Game {
+            create_time: None,
+            end_time: None,
+            id: None,
+            players_number: Number::one(),
+            points_limit: Points::zero(),
+            rounds: BTreeSet::new(),
+            start_time: None,
+            state: State::not_started(Points::zero()),
+            update_time: None,
+        }
+    }
+
+    fn is_finished(&self) -> bool {
+        matches!(self.state, State::Finished(_))
+    }
+
+    fn is_in_progress(&self) -> bool {
+        matches!(self.state, State::InProgress(_))
+    }
+
+    pub fn load(parameters: LoadGameParameters) -> Result<Self, Error> {
+        let LoadGameParameters {
+            create_time,
+            end_time: _,
+            id,
+            players_number,
+            points_limit,
+            rounds,
+            start_time: _,
+            update_time,
+        } = parameters;
+
+        let mut game = Self::new(NewGameParameters {
+            points_limit,
+            players_number,
+        })?;
+
+        game.assign_id(id)?;
+        game.assign_create_time(create_time)?;
+        game.assign_rounds(rounds)?;
+        game.change_update_time(update_time)?;
+
+        Ok(game)
     }
 
     pub fn new(parameters: NewGameParameters) -> Result<Self, Error> {
@@ -236,21 +353,12 @@ impl Game {
             players_number,
         } = parameters;
 
-        let state = State::NotStarted(NotStartedState {
-            points_to_win: points_limit,
-        });
+        let mut game = Self::init();
 
-        GameBuilder::new()
-            .create_time(None)
-            .end_time(None)
-            .id(None)
-            .players_number(players_number)
-            .points_limit(points_limit)
-            .rounds(vec![])
-            .start_time(None)
-            .state(state)
-            .update_time(None)
-            .build()
+        game.change_points_limit(points_limit)?;
+        game.change_players_number(players_number)?;
+
+        Ok(game)
     }
 
     pub fn players_number(&self) -> Number {
@@ -265,10 +373,6 @@ impl Game {
         self.start_time
     }
 
-    pub fn end_time(&self) -> Option<DateTime<Utc>> {
-        self.end_time
-    }
-
     pub fn points_limit(&self) -> Points {
         self.points_limit
     }
@@ -277,117 +381,15 @@ impl Game {
         &self.state
     }
 
+    pub fn update_time(&self) -> Option<DateTime<Utc>> {
+        self.update_time
+    }
+
     pub fn winner(&self) -> Option<Number> {
         match &self.state {
             State::Finished(state) => Some(state.winner),
             _ => None,
         }
-    }
-
-    pub fn update_time(&self) -> Option<DateTime<Utc>> {
-        self.update_time
-    }
-}
-
-struct GameBuilder {
-    create_time: Result<Option<DateTime<Utc>>, Error>,
-    end_time: Result<Option<DateTime<Utc>>, Error>,
-    id: Result<Option<Uuid>, Error>,
-    players_number: Result<Number, Error>,
-    points_limit: Result<Points, Error>,
-    rounds: Result<BTreeSet<Round>, Error>,
-    start_time: Result<Option<DateTime<Utc>>, Error>,
-    state: Result<State, Error>,
-    update_time: Result<Option<DateTime<Utc>>, Error>,
-}
-
-impl GameBuilder {
-    fn build(self) -> Result<Game, Error> {
-        Ok(Game {
-            create_time: self.create_time?,
-            end_time: self.end_time?,
-            id: self.id?,
-            players_number: self.players_number?,
-            points_limit: self.points_limit?,
-            rounds: self.rounds?,
-            start_time: self.start_time?,
-            state: self.state?,
-            update_time: self.update_time?,
-        })
-    }
-
-    fn create_time(mut self, create_time: Option<DateTime<Utc>>) -> Self {
-        self.create_time = Ok(create_time);
-
-        self
-    }
-
-    fn new() -> Self {
-        let error = |field: &str| Error::unexpected(format!("Game {field} not set"));
-
-        Self {
-            create_time: error("create time").into(),
-            end_time: error("end time").into(),
-            id: error("id").into(),
-            players_number: error("players number").into(),
-            points_limit: error("points limit").into(),
-            rounds: error("rounds").into(),
-            start_time: error("start time").into(),
-            state: error("state").into(),
-            update_time: error("update time").into(),
-        }
-    }
-
-    fn id(mut self, id: Option<Uuid>) -> Self {
-        self.id = Ok(id);
-
-        self
-    }
-
-    fn players_number(mut self, players_number: Number) -> Self {
-        self.players_number = Ok(players_number);
-
-        self
-    }
-
-    fn points_limit(mut self, points_limit: Points) -> Self {
-        self.points_limit = if points_limit.is_zero() {
-            Error::invalid_argument("Points limit cannot be zero").into()
-        } else {
-            Ok(points_limit)
-        };
-
-        self
-    }
-
-    fn rounds(mut self, rounds: Vec<Round>) -> Self {
-        self.rounds = Ok(BTreeSet::from_iter(rounds));
-
-        self
-    }
-
-    fn start_time(mut self, start_time: Option<DateTime<Utc>>) -> Self {
-        self.start_time = Ok(start_time);
-
-        self
-    }
-
-    fn end_time(mut self, end_time: Option<DateTime<Utc>>) -> Self {
-        self.end_time = Ok(end_time);
-
-        self
-    }
-
-    fn state(mut self, state: State) -> Self {
-        self.state = Ok(state);
-
-        self
-    }
-
-    fn update_time(mut self, update_time: Option<DateTime<Utc>>) -> Self {
-        self.update_time = Ok(update_time);
-
-        self
     }
 }
 
@@ -447,6 +449,12 @@ pub enum State {
     NotStarted(NotStartedState),
     InProgress(InProgressState),
     Finished(FinishedState),
+}
+
+impl State {
+    pub(crate) fn not_started(points_to_win: Points) -> Self {
+        Self::NotStarted(NotStartedState { points_to_win })
+    }
 }
 
 pub struct InProgressState {

@@ -49,7 +49,7 @@ impl coordinator::ListGames for Repo {
 }
 
 impl coordinator::UpdateGame for Repo {
-    async fn update_game(&self, game: &Game) -> Result<(), Error> {
+    async fn update_game(&self, game: &mut Game) -> Result<(), Error> {
         self.conn().await?.update_game(game).await
     }
 }
